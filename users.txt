@@ -1,0 +1,7 @@
+# AI Uniform System - User Database
+# Format: username,password_hash,user_type,name,status
+# Password for guidance1 and guidance2 is: guidance123
+
+guidance1,c1b06164b266c44f4c5f3801f8baaa7a3dd1f2a648f20f089c99563bcdabb3e6,guidance,Mrs. Sarah Johnson,ACTIVE
+guidance2,c1b06164b266c44f4c5f3801f8baaa7a3dd1f2a648f20f089c99563bcdabb3e6,guidance,Ms. Emily Chen,ACTIVE
+admin1,c1b06164b266c44f4c5f3801f8baaa7a3dd1f2a648f20f089c99563bcdabb3e6,admin,Mr. John Smith,ACTIVE
