@@ -24,7 +24,7 @@ class FirebaseManager:
             # Check if Firebase is already initialized
             if not firebase_admin._apps:
                 # Try to use service account key file
-                service_account_path = "ainiform-system-c42de-firebase-adminsdk-fbsvc-d12acf3a68.json"
+                service_account_path = "ServiceAccountKey.json"
                 
                 if os.path.exists(service_account_path):
                     self.cred = credentials.Certificate(service_account_path)

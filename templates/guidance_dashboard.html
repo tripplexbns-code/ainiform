@@ -1202,6 +1202,81 @@
             text-align: right;
         }
         
+        /* Design name link styles */
+        .design-name-link {
+            color: #1877f2;
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .design-name-link:hover {
+            color: #0d5aa7;
+            text-decoration: underline;
+        }
+        
+        /* Design details modal styles */
+        .modal-large {
+            max-width: 800px;
+        }
+        
+        .design-details-container {
+            display: flex;
+            gap: 30px;
+            padding: 20px 0;
+        }
+        
+        .design-info-section {
+            flex: 1;
+        }
+        
+        .design-image-section {
+            flex: 1;
+        }
+        
+        .detail-row {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            color: #333;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .detail-value {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .image-container {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            background: #fafafa;
+        }
+        
+        .image-container img {
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .design-details-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .modal-large {
+                max-width: 95%;
+            }
+        }
+        
         .clickable-student-name {
             color: #007bff;
             cursor: pointer;
@@ -1927,9 +2002,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for design in designs %}
+                                {% for design in designs[:5] %}
                                 <tr>
-                                    <td>{{ design.name or 'Unknown Design' }}</td>
+                                    <td><a href="#" class="design-name-link" onclick="viewDesignDetails('{{ design.id or 'unknown' }}')">{{ design.name or 'Unknown Design' }}</a></td>
                                     <td>{{ design.type or 'Unknown Type' }}</td>
                                     <td><span class="status-badge status-{{ (design.status or 'Pending').lower() }}">{{ design.status or 'Pending' }}</span></td>
                                     <td>{{ design.components|length if design.components else 0 }}</td>
@@ -2074,25 +2149,65 @@
                     <label class="form-label">Type</label>
                     <select class="form-select" name="type" required>
                         <option value="">Select Type</option>
-                        <option value="Formal">Formal</option>
-                        <option value="Casual">Casual</option>
-                        <option value="Sports">Sports</option>
-                        <option value="Special">Special</option>
+                        <option value="school uniform">School Uniform</option>
+                        <option value="house shirt">House Shirt</option>
+                        <option value="casual shirt">Casual Shirt</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <textarea class="form-input form-textarea" name="description" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Components (comma-separated)</label>
-                    <input type="text" class="form-input" name="components" placeholder="e.g., Shirt, Pants, Shoes, Belt">
+                    <label class="form-label">Upload Picture</label>
+                    <input type="file" class="form-input" name="image" accept="image/*">
+                    <small class="form-text">Upload a picture of the uniform design (JPG, PNG, GIF)</small>
                 </div>
                 <div class="action-buttons">
                     <button type="submit" class="btn btn-primary">Save Design</button>
                     <button type="button" class="btn btn-secondary" onclick="closeModal('designModal')">Cancel</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Design Details Modal -->
+    <div id="designDetailsModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 class="modal-title">Design Details</h3>
+                <button class="close-btn" onclick="closeModal('designDetailsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="design-details-container">
+                    <div class="design-info-section">
+                        <div class="detail-row">
+                            <label class="detail-label">Design Name:</label>
+                            <span class="detail-value" id="detailDesignName">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <label class="detail-label">Type:</label>
+                            <span class="detail-value" id="detailDesignType">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <label class="detail-label">Status:</label>
+                            <span class="detail-value" id="detailDesignStatus">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <label class="detail-label">Created Date:</label>
+                            <span class="detail-value" id="detailDesignDate">-</span>
+                        </div>
+                    </div>
+                    <div class="design-image-section">
+                        <label class="detail-label">Design Image:</label>
+                        <div class="image-container" id="designImageContainer">
+                            <img id="designImage" src="" alt="Design Image" style="max-width: 100%; max-height: 400px; display: none;">
+                            <div id="noImageMessage" style="text-align: center; padding: 20px; color: #666; display: none;">
+                                No image uploaded for this design
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('designDetailsModal')">Close</button>
+            </div>
         </div>
     </div>
 
@@ -2570,20 +2685,11 @@
         document.getElementById('designForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
-            const data = Object.fromEntries(formData);
-            
-            // Convert components string to array
-            if (data.components) {
-                data.components = data.components.split(',').map(c => c.trim()).filter(c => c);
-            }
             
             fetch('/api/designs', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
                 credentials: 'same-origin',
-                body: JSON.stringify(data)
+                body: formData
             })
             .then(response => response.json())
             .then(result => {
@@ -3967,6 +4073,49 @@
             }
         }
 
+        function viewDesignDetails(id) {
+            // Get all designs from the current page data
+            const designs = {{ designs | tojson }};
+            console.log('All designs:', designs);
+            console.log('Looking for design with ID:', id);
+            
+            const design = designs.find(d => d.id === id || d._id === id);
+            console.log('Found design:', design);
+            
+            if (!design) {
+                showAlert('Design not found!', 'error');
+                return;
+            }
+            
+            // Populate the modal with design details
+            document.getElementById('detailDesignName').textContent = design.name || 'Unknown Design';
+            document.getElementById('detailDesignType').textContent = design.type || 'Unknown Type';
+            document.getElementById('detailDesignStatus').textContent = design.status || 'Unknown Status';
+            document.getElementById('detailDesignDate').textContent = design.created_date || design.submitted_date || 'Unknown Date';
+            
+            // Handle image display
+            const imageElement = document.getElementById('designImage');
+            const noImageMessage = document.getElementById('noImageMessage');
+            
+            console.log('Design image_url:', design.image_url);
+            console.log('Image URL type:', typeof design.image_url);
+            console.log('Image URL length:', design.image_url ? design.image_url.length : 'null');
+            
+            if (design.image_url && design.image_url.trim() !== '') {
+                console.log('Setting image source to:', design.image_url);
+                imageElement.src = design.image_url;
+                imageElement.style.display = 'block';
+                noImageMessage.style.display = 'none';
+            } else {
+                console.log('No image URL found, showing no image message');
+                imageElement.style.display = 'none';
+                noImageMessage.style.display = 'block';
+            }
+            
+            // Show the modal
+            openModal('designDetailsModal');
+        }
+
         function exportData(type) {
             showAlert('Export functionality coming soon!', 'success');
         }
@@ -5202,7 +5351,72 @@
                 }
             }, 30000); // 30 seconds
         });
+
+        // Missing utility functions
+        function showAlert(message, type = 'info') {
+            // Create alert element
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 5px;
+                color: white;
+                font-weight: 500;
+                z-index: 10000;
+                max-width: 400px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                animation: slideIn 0.3s ease-out;
+            `;
+            
+            // Set background color based on type
+            const colors = {
+                'success': '#28a745',
+                'error': '#dc3545',
+                'warning': '#ffc107',
+                'info': '#17a2b8'
+            };
+            alertDiv.style.backgroundColor = colors[type] || colors.info;
+            
+            alertDiv.textContent = message;
+            document.body.appendChild(alertDiv);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 5000);
+        }
+
+        function refreshDataOnly() {
+            // Refresh the page to get latest data
+            window.location.reload();
+        }
+
+        function refreshViolationCounts() {
+            // This function would recalculate violation counts
+            // For now, just refresh the data
+            refreshDataOnly();
+        }
+
+        // Add CSS animation for alerts
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
-</html>
 </html>
