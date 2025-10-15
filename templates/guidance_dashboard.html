@@ -480,12 +480,6 @@
         
         #designs .data-table th:nth-child(4),
         #designs .data-table td:nth-child(4) {
-            width: 10%; /* Quantity - compact for numbers */
-            text-align: center;
-        }
-        
-        #designs .data-table th:nth-child(5),
-        #designs .data-table td:nth-child(5) {
             width: 30%; /* Actions - more space for multiple buttons */
             white-space: nowrap;
         }
@@ -1181,6 +1175,19 @@
         .violation-type {
             font-weight: bold;
             color: #495057;
+        }
+        
+        .violation-type-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .violation-date {
+            font-size: 0.75em;
+            color: #6c757d;
+            font-weight: normal;
+            margin-top: 2px;
         }
         
         .violation-details {
@@ -1997,7 +2004,6 @@
                                     <th>Design Name</th>
                                     <th>Type</th>
                                     <th>Status</th>
-                                    <th>Quantity</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -2007,17 +2013,15 @@
                                     <td><a href="#" class="design-name-link" onclick="viewDesignDetails('{{ design.id or 'unknown' }}')">{{ design.name or 'Unknown Design' }}</a></td>
                                     <td>{{ design.type or 'Unknown Type' }}</td>
                                     <td><span class="status-badge status-{{ (design.status or 'Pending').lower() }}">{{ design.status or 'Pending' }}</span></td>
-                                    <td>{{ design.components|length if design.components else 0 }}</td>
                                     <td>
                                         <button class="btn btn-success" onclick="approveDesign('{{ design.id or 'unknown' }}')">Approve</button>
-                                        <button class="btn btn-secondary" onclick="editDesign('{{ design.id or 'unknown' }}')">Edit</button>
                                         <button class="btn btn-danger" onclick="deleteDesign('{{ design.id or 'unknown' }}')">Delete</button>
                                     </td>
                                 </tr>
                                 {% endfor %}
                                 {% if not designs or designs|length == 0 %}
                                 <tr>
-                                    <td colspan="5" style="text-align: center; padding: 20px; color: #666;">
+                                    <td colspan="4" style="text-align: center; padding: 20px; color: #666;">
                                         <div style="margin-bottom: 10px;">📋 No uniform designs found</div>
                                         <button class="btn btn-primary" onclick="openModal('designModal')">➕ Add First Design</button>
                                     </td>
@@ -2301,72 +2305,6 @@
         </div>
     </div>
 
-    <!-- Edit Design Modal -->
-    <div id="editDesignModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Edit Uniform Design</h3>
-                <button class="close-btn" onclick="closeModal('editDesignModal')">&times;</button>
-            </div>
-            <form id="editDesignForm">
-                <input type="hidden" id="editDesignId" name="id">
-                <div class="form-group">
-                    <label class="form-label">Design Name</label>
-                    <input type="text" class="form-input" id="editDesignName" name="name" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Type</label>
-                    <select class="form-select" id="editDesignType" name="type" required>
-                        <option value="">Select Type</option>
-                        <option value="Formal">Formal - Official school uniform</option>
-                        <option value="Casual">Casual - Everyday wear</option>
-                        <option value="Sports">Sports - Physical education uniform</option>
-                        <option value="Special">Special - Events and ceremonies</option>
-                        <option value="Winter">Winter - Cold weather variant</option>
-                        <option value="Summer">Summer - Lightweight variant</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <textarea class="form-input form-textarea" id="editDesignDescription" name="description" required placeholder="Describe the uniform design details..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Components (comma-separated)</label>
-                    <input type="text" class="form-input" id="editDesignComponents" name="components" placeholder="e.g., Shirt, Pants, Shoes, Belt, Tie">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Status</label>
-                    <select class="form-select" id="editDesignStatus" name="status" required>
-                        <option value="">Select Status</option>
-                        <option value="Draft">Draft - Under development</option>
-                        <option value="Pending Review">Pending Review - Awaiting approval</option>
-                        <option value="Approved">Approved - Ready for implementation</option>
-                        <option value="Rejected">Rejected - Needs revision</option>
-                        <option value="Active">Active - Currently in use</option>
-                        <option value="Inactive">Inactive - No longer used</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Target Grade Level</label>
-                    <select class="form-select" id="editDesignGradeLevel" name="grade_level">
-                        <option value="">Select Grade Level</option>
-                        <option value="Elementary">Elementary (K-5)</option>
-                        <option value="Middle School">Middle School (6-8)</option>
-                        <option value="High School">High School (9-12)</option>
-                        <option value="All Grades">All Grades</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Notes</label>
-                    <textarea class="form-input form-textarea" id="editDesignNotes" name="notes" placeholder="Add any additional notes or requirements..."></textarea>
-                </div>
-                <div class="action-buttons">
-                    <button type="submit" class="btn btn-primary">Update Design</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('editDesignModal')">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <!-- Alert Messages -->
     <div id="alertContainer"></div>
@@ -2659,6 +2597,10 @@
             .then(result => {
                 if (result.success) {
                     showAlert('Appeal approved and saved successfully!', 'success');
+                    
+                    // Log activity
+                    logActivity('add', 'appeal', 'Appeal Added', `New appeal submitted by ${data.student_name}`, `Reason: ${data.reason_type}, Details: ${data.reason.substring(0, 50)}...`);
+                    
                     closeModal('appealModal');
                     
                     // Reset form
@@ -2695,6 +2637,12 @@
             .then(result => {
                 if (result.success) {
                     showAlert('Design added successfully!', 'success');
+                    
+                    // Log activity
+                    const formData = new FormData(this);
+                    const data = Object.fromEntries(formData);
+                    logActivity('add', 'design', 'Design Added', `New uniform design created: ${data.name}`, `Type: ${data.type}, Status: Under Review`);
+                    
                     closeModal('designModal');
                     
                     // Automatically reload the page to show the new design
@@ -2731,6 +2679,10 @@
             .then(result => {
                 if (result.success) {
                     showAlert('Violation updated successfully!', 'success');
+                    
+                    // Log activity
+                    logActivity('edit', 'violation', 'Violation Updated', `Violation for ${data.student_name} has been updated`, `Student: ${data.student_name}, Type: ${data.violation_type}, Status: ${data.status}`);
+                    
                     closeModal('editViolationModal');
                     
                     // Automatically refresh the table to show the updated violation
@@ -2778,6 +2730,10 @@
             .then(result => {
                 if (result.success) {
                     showAlert('Appeal updated successfully!', 'success');
+                    
+                    // Log activity
+                    logActivity('edit', 'appeal', 'Appeal Updated', `Appeal for ${data.student_name} has been updated`, `Status: ${data.status}, Reason: ${data.reason_type}`);
+                    
                     closeModal('editAppealModal');
                     location.reload();
                 } else {
@@ -2790,42 +2746,6 @@
         });
 
 
-        // Edit Design Form Handler
-        document.getElementById('editDesignForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData);
-            const designId = data.id;
-            
-            // Remove the id from the data object as it's not needed in the update
-            delete data.id;
-            
-            // Convert components string to array
-            if (data.components) {
-                data.components = data.components.split(',').map(c => c.trim()).filter(c => c);
-            }
-            
-            fetch(`/api/designs/${designId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    showAlert('Design updated successfully!', 'success');
-                    closeModal('editDesignModal');
-                    location.reload();
-                } else {
-                    showAlert('Error updating design: ' + (result.error || result.message || 'Unknown error'), 'error');
-                }
-            })
-            .catch(error => {
-                showAlert('Error updating design: ' + error.message, 'error');
-            });
-        });
 
         // Search functionality
         function searchViolations() {
@@ -3378,6 +3298,8 @@
 
         // Activity logging function
         function logActivity(type, category, title, description, details = '') {
+            console.log(`[ACTIVITY LOG] Logging activity: ${type} - ${category} - ${title}`);
+            
             const activity = {
                 id: `${category}_${Date.now()}`,
                 type: type,
@@ -3395,10 +3317,15 @@
             activities = activities.slice(0, 100); // Keep only last 100 activities
             localStorage.setItem('activities', JSON.stringify(activities));
             
+            console.log(`[ACTIVITY LOG] Activity stored. Total activities: ${activities.length}`);
+            
             // If activity log tab is active, refresh it
             const activityTab = document.getElementById('activity');
             if (activityTab && activityTab.classList.contains('active')) {
+                console.log('[ACTIVITY LOG] Activity tab is active, refreshing...');
                 loadActivityLog();
+            } else {
+                console.log('[ACTIVITY LOG] Activity tab is not active');
             }
             
             // Activity logged successfully
@@ -3460,6 +3387,14 @@
                         
                         // Refresh the table immediately
                         refreshDataOnly();
+                        
+                        // Also refresh activity log if it's currently active
+                        const activityTab = document.getElementById('activity');
+                        if (activityTab && activityTab.classList.contains('active')) {
+                            setTimeout(() => {
+                                loadActivityLog();
+                            }, 500);
+                        }
                     } else {
                         showAlert('Error deleting violation: ' + (result.error || result.message || 'Unknown error'), 'error');
                     }
@@ -3506,9 +3441,17 @@
                                     const successCount = results.filter(result => result.success).length;
                                     if (successCount === violations.length) {
                                         showAlert(`Successfully deleted ${successCount} violations!`, 'success');
+                                        
+                                        // Log activity
+                                        logActivity('delete', 'violation', 'Bulk Violation Deletion', `All ${successCount} violations have been deleted`, `Total deleted: ${successCount} violations`);
+                                        
                                         refreshDataOnly();
                                     } else {
                                         showAlert(`Deleted ${successCount} out of ${violations.length} violations. Some may have failed.`, 'warning');
+                                        
+                                        // Log activity
+                                        logActivity('delete', 'violation', 'Partial Violation Deletion', `${successCount} out of ${violations.length} violations deleted`, `Successfully deleted: ${successCount}, Failed: ${violations.length - successCount}`);
+                                        
                                         refreshDataOnly();
                                     }
                                 })
@@ -3559,9 +3502,17 @@
                                     const successCount = results.filter(result => result.success).length;
                                     if (successCount === appeals.length) {
                                         showAlert(`Successfully deleted ${successCount} appeals!`, 'success');
+                                        
+                                        // Log activity
+                                        logActivity('delete', 'appeal', 'Bulk Appeal Deletion', `All ${successCount} appeals have been deleted`, `Total deleted: ${successCount} appeals`);
+                                        
                                         location.reload();
                                     } else {
                                         showAlert(`Deleted ${successCount} out of ${appeals.length} appeals. Some may have failed.`, 'warning');
+                                        
+                                        // Log activity
+                                        logActivity('delete', 'appeal', 'Partial Appeal Deletion', `${successCount} out of ${appeals.length} appeals deleted`, `Successfully deleted: ${successCount}, Failed: ${appeals.length - successCount}`);
+                                        
                                         location.reload();
                                     }
                                 })
@@ -3612,9 +3563,17 @@
                                     const successCount = results.filter(result => result.success).length;
                                     if (successCount === designs.length) {
                                         showAlert(`Successfully deleted ${successCount} designs!`, 'success');
+                                        
+                                        // Log activity
+                                        logActivity('delete', 'design', 'Bulk Design Deletion', `All ${successCount} designs have been deleted`, `Total deleted: ${successCount} designs`);
+                                        
                                         location.reload();
                                     } else {
                                         showAlert(`Deleted ${successCount} out of ${designs.length} designs. Some may have failed.`, 'warning');
+                                        
+                                        // Log activity
+                                        logActivity('delete', 'design', 'Partial Design Deletion', `${successCount} out of ${designs.length} designs deleted`, `Successfully deleted: ${successCount}, Failed: ${designs.length - successCount}`);
+                                        
                                         location.reload();
                                     }
                                 })
@@ -3700,8 +3659,14 @@
                     if (result.success) {
                         if (result.violation_deleted) {
                             showAlert('Appeal approved successfully! Related violation has been automatically deleted.', 'success');
+                            
+                            // Log activity
+                            logActivity('edit', 'appeal', 'Appeal Approved', `Appeal with ID ${id} has been approved`, `Status: Approved, Related violation deleted`);
                         } else {
                             showAlert('Appeal approved successfully!', 'success');
+                            
+                            // Log activity
+                            logActivity('edit', 'appeal', 'Appeal Approved', `Appeal with ID ${id} has been approved`, `Status: Approved`);
                         }
                         reapplyGrouping();
                         refreshDataOnly(); // Use the new refresh function that maintains current tab
@@ -4008,6 +3973,10 @@
                 .then(result => {
                     if (result.success) {
                         showAlert('Design approved successfully!', 'success');
+                        
+                        // Log activity
+                        logActivity('edit', 'design', 'Design Approved', `Design with ID ${id} has been approved`, `Status: Approved`);
+                        
                         reapplyGrouping();
                         refreshDataOnly(); // Use the new refresh function that maintains current tab
                     } else {
@@ -4020,38 +3989,6 @@
             }
         }
 
-        function editDesign(id) {
-            // Find the design data from the table
-            const table = document.querySelector('#designs tbody');
-            const rows = table.querySelectorAll('tr');
-            
-            for (let row of rows) {
-                const editBtn = row.querySelector('button[onclick*="editDesign"]');
-                if (editBtn && editBtn.getAttribute('onclick').includes(id)) {
-                    const cells = row.querySelectorAll('td');
-                    
-                    // Populate the edit form with current data
-                    document.getElementById('editDesignId').value = id;
-                    document.getElementById('editDesignName').value = cells[0].textContent.trim();
-                    document.getElementById('editDesignType').value = cells[1].textContent.trim();
-                    document.getElementById('editDesignDescription').value = 'Design description details...'; // Default description
-                    
-                    // Extract status from the badge
-                    const statusBadge = cells[2].querySelector('.status-badge');
-                    const status = statusBadge ? statusBadge.textContent.trim() : 'Pending Review';
-                    document.getElementById('editDesignStatus').value = status;
-                    
-                    // Set default values for other fields
-                    document.getElementById('editDesignComponents').value = 'Shirt, Pants, Shoes'; // Default components
-                    document.getElementById('editDesignGradeLevel').value = 'All Grades'; // Default grade level
-                    document.getElementById('editDesignNotes').value = 'Additional design notes...'; // Default notes
-                    
-                    // Open the edit modal
-                    openModal('editDesignModal');
-                    break;
-                }
-            }
-        }
 
         function deleteDesign(id) {
             if (confirm('Are you sure you want to delete this design?')) {
@@ -4062,6 +3999,10 @@
                 .then(result => {
                     if (result.success) {
                         showAlert('Design deleted successfully!', 'success');
+                        
+                        // Log activity
+                        logActivity('delete', 'design', 'Design Deleted', `Uniform design with ID ${id} has been deleted`, `ID: ${id}`);
+                        
                         refreshDataOnly();
                     } else {
                         showAlert('Error deleting design: ' + (result.error || result.message || 'Unknown error'), 'error');
@@ -5086,7 +5027,10 @@
                                     <div class="violation-item">
                                         <div class="violation-header">
                                             <span class="violation-number">#${index + 1}</span>
-                                            <span class="violation-type">${violation.violation_type || 'Incomplete Uniform'}</span>
+                                            <div class="violation-type-container">
+                                                <span class="violation-type">${violation.violation_type || 'Incomplete Uniform'}</span>
+                                                <span class="violation-date">${violation.date ? new Date(violation.date).toLocaleDateString('en-US', {month: '2-digit', day: '2-digit', year: 'numeric'}) : 'No date'}</span>
+                                            </div>
                                             <span class="violation-status status-${(violation.status || 'Warning').toLowerCase().replace(/[^a-z0-9]/g, '-')}">${violation.status || 'Warning'}</span>
                                         </div>
                                         <div class="violation-details">
@@ -5351,72 +5295,7 @@
                 }
             }, 30000); // 30 seconds
         });
-
-        // Missing utility functions
-        function showAlert(message, type = 'info') {
-            // Create alert element
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type}`;
-            alertDiv.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 15px 20px;
-                border-radius: 5px;
-                color: white;
-                font-weight: 500;
-                z-index: 10000;
-                max-width: 400px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                animation: slideIn 0.3s ease-out;
-            `;
-            
-            // Set background color based on type
-            const colors = {
-                'success': '#28a745',
-                'error': '#dc3545',
-                'warning': '#ffc107',
-                'info': '#17a2b8'
-            };
-            alertDiv.style.backgroundColor = colors[type] || colors.info;
-            
-            alertDiv.textContent = message;
-            document.body.appendChild(alertDiv);
-            
-            // Auto remove after 5 seconds
-            setTimeout(() => {
-                if (alertDiv.parentNode) {
-                    alertDiv.parentNode.removeChild(alertDiv);
-                }
-            }, 5000);
-        }
-
-        function refreshDataOnly() {
-            // Refresh the page to get latest data
-            window.location.reload();
-        }
-
-        function refreshViolationCounts() {
-            // This function would recalculate violation counts
-            // For now, just refresh the data
-            refreshDataOnly();
-        }
-
-        // Add CSS animation for alerts
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideIn {
-                from {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-        `;
-        document.head.appendChild(style);
     </script>
 </body>
+</html>
 </html>

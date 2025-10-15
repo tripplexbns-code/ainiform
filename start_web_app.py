@@ -22,12 +22,11 @@ def main():
     
     # Check if required files exist
     required_files = [
-        'web_server.py',
+        'modern_login_ui.py',
         'users.txt',
         'templates/login.html',
         'templates/guidance_dashboard.html',
-        'templates/admin_dashboard.html',
-        'firebase_config.py'
+        'templates/admin_dashboard.html'
     ]
     
     missing_files = []
@@ -59,7 +58,7 @@ def main():
     
     # Start the Flask application
     try:
-        from web_server import app
+        from modern_login_ui import app
         app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)
     except KeyboardInterrupt:
         print("\n\n👋 Shutting down web application...")

@@ -67,16 +67,3 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
-
-# Firebase and sensitive files
-ServiceAccountKey.json
-*firebase*service*account*.json
-*firebase*adminsdk*.json
-firebase_service_account.json
-
-# Cloudinary credentials
-cloudinary_config.py
-
-# Local development files
-access_log.txt
-users.txt

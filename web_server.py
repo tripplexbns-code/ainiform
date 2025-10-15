@@ -1677,7 +1677,7 @@ if __name__ == "__main__":
     debug = os.environ.get('FLASK_DEBUG', 'True').lower() == 'true'
     
     # Production mode detection
-    is_production = os.environ.get('ENVIRONMENT') == 'production'
+    is_production = os.environ.get('ENVIRONMENT') == 'production' or os.environ.get('RAILWAY_ENVIRONMENT') == 'production'
     
     # Get local IP address function
     def get_local_ip():
@@ -1695,7 +1695,7 @@ if __name__ == "__main__":
         app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
         debug = False
         print(f"\n[START] AI-niform Server - Production Mode")
-        print(f"🌐 Live at: https://your-domain.com")
+        print(f"🌐 Live at: https://your-railway-domain.railway.app")
     else:
         # Development settings
         local_ip = get_local_ip()
