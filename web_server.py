@@ -715,22 +715,42 @@ def api_violations():
             print(f"[API] GET /api/violations returning {len(violations)} violations")
             return {"success": True, "data": violations}, 200
         except Exception as e:
+            print(f"[ERROR] GET /api/violations failed: {e}")
             return {"error": str(e)}, 500
 
     elif request.method == "POST":
         try:
+            print(f"[API] POST /api/violations - Starting violation creation")
+            
+            # Check Firebase connection first
+            if not firebase_manager.db:
+                print(f"[ERROR] Firebase not initialized - cannot add violation")
+                return {"error": "Database connection failed. Please check Firebase configuration.", "debug": "firebase_not_initialized"}, 500
+            
             data = request.get_json()
             if not data:
+                print(f"[ERROR] No data provided in request")
                 return {"error": "No data provided"}, 400
+            
+            print(f"[DEBUG] Received violation data: {data}")
+            
+            # Validate required fields
+            required_fields = ['student_name', 'student_id', 'violation_type', 'description']
+            missing_fields = [field for field in required_fields if not data.get(field)]
+            if missing_fields:
+                print(f"[ERROR] Missing required fields: {missing_fields}")
+                return {"error": f"Missing required fields: {', '.join(missing_fields)}"}, 400
             
             # Add current date automatically if not provided
             if 'date' not in data or not data['date']:
                 from datetime import datetime
                 data['date'] = datetime.now().strftime('%Y-%m-%d')
+                print(f"[DEBUG] Added default date: {data['date']}")
             
             # Add unique timestamp to prevent race conditions
             from datetime import datetime
             data['created_timestamp'] = datetime.now().isoformat()
+            print(f"[DEBUG] Added timestamp: {data['created_timestamp']}")
             
             # Set default values for severity and status
             if 'severity' not in data or not data['severity']:
@@ -743,50 +763,68 @@ def api_violations():
             violation_date = data.get('date', '')
             created_timestamp = data.get('created_timestamp', '')
             
+            print(f"[DEBUG] Checking for duplicates - Student: {student_name}, ID: {student_id}, Date: {violation_date}")
+            
             if student_name and student_id and description and violation_date:
-                # Get existing violations to check for duplicates
-                existing_violations = get_from_firebase("violations") or []
-                
-                # Check for exact duplicates (same student, description, date)
-                duplicate_check = [
-                    v for v in existing_violations 
-                    if (v.get('student_name') == student_name and 
-                        v.get('student_id') == student_id and 
-                        v.get('description', '').strip().lower() == description.strip().lower() and
-                        v.get('date') == violation_date)
-                ]
-                
-                if duplicate_check:
-                    return {"error": "A violation with the same description already exists for this student on this date", "duplicate": True}, 409
-                
-                # Check for rapid duplicate submissions (within 5 seconds)
-                if created_timestamp:
-                    from datetime import datetime, timedelta
-                    current_time = datetime.now()
-                    recent_violations = [
+                try:
+                    # Get existing violations to check for duplicates
+                    print(f"[DEBUG] Fetching existing violations for duplicate check")
+                    existing_violations = get_from_firebase("violations") or []
+                    print(f"[DEBUG] Found {len(existing_violations)} existing violations")
+                    
+                    # Check for exact duplicates (same student, description, date)
+                    duplicate_check = [
                         v for v in existing_violations 
                         if (v.get('student_name') == student_name and 
-                            v.get('student_id') == student_id and
-                            v.get('created_timestamp'))
+                            v.get('student_id') == student_id and 
+                            v.get('description', '').strip().lower() == description.strip().lower() and
+                            v.get('date') == violation_date)
                     ]
                     
-                    for violation in recent_violations:
-                        try:
-                            violation_time = datetime.fromisoformat(violation.get('created_timestamp', ''))
-                            if (current_time - violation_time).total_seconds() < 5:
-                                return {"error": "Please wait before submitting another violation for this student", "duplicate": True}, 429
-                        except:
-                            continue
+                    if duplicate_check:
+                        print(f"[WARN] Duplicate violation found for {student_name}")
+                        return {"error": "A violation with the same description already exists for this student on this date", "duplicate": True}, 409
+                    
+                    # Check for rapid duplicate submissions (within 5 seconds)
+                    if created_timestamp:
+                        from datetime import datetime, timedelta
+                        current_time = datetime.now()
+                        recent_violations = [
+                            v for v in existing_violations 
+                            if (v.get('student_name') == student_name and 
+                                v.get('student_id') == student_id and
+                                v.get('created_timestamp'))
+                        ]
+                        
+                        for violation in recent_violations:
+                            try:
+                                violation_time = datetime.fromisoformat(violation.get('created_timestamp', ''))
+                                if (current_time - violation_time).total_seconds() < 5:
+                                    print(f"[WARN] Rapid duplicate submission detected for {student_name}")
+                                    return {"error": "Please wait before submitting another violation for this student", "duplicate": True}, 429
+                            except:
+                                continue
+                except Exception as e:
+                    print(f"[WARN] Error checking duplicates: {e}")
+                    # Continue with creation even if duplicate check fails
             
             # Determine status based on violation count for this student
-            if student_name and student_id:
-                data['status'] = get_violation_status_by_count(student_name, student_id)
-            else:
-                data['status'] = 'Warning'  # Fallback if no student info
+            try:
+                if student_name and student_id:
+                    data['status'] = get_violation_status_by_count(student_name, student_id)
+                    print(f"[DEBUG] Calculated status: {data['status']}")
+                else:
+                    data['status'] = 'Warning'  # Fallback if no student info
+            except Exception as e:
+                print(f"[WARN] Error calculating status: {e}")
+                data['status'] = 'Warning'
             
             # Add violation to Firebase
+            print(f"[DEBUG] Attempting to add violation to Firebase")
             doc_id = add_to_firebase("violations", data)
+            
             if doc_id:
+                print(f"[SUCCESS] Violation added successfully with ID: {doc_id}")
                 appeal_created = False
                 
                 # Automatically create an appeal for the violation if enabled
@@ -821,9 +859,14 @@ def api_violations():
                 print(f"[CACHE] Cache cleared successfully")
                 return {"success": True, "id": doc_id, "appeal_created": appeal_created}, 201
             else:
-                return {"error": "Failed to add violation"}, 500
+                print(f"[ERROR] Failed to add violation to Firebase - add_to_firebase returned None")
+                return {"error": "Failed to add violation to database. Please check Firebase configuration.", "debug": "add_to_firebase_failed"}, 500
+                
         except Exception as e:
-            return {"error": str(e)}, 500
+            print(f"[ERROR] POST /api/violations failed: {e}")
+            import traceback
+            traceback.print_exc()
+            return {"error": f"Server error: {str(e)}", "debug": "exception_in_violation_creation"}, 500
 
 
 @app.route("/api/violations/<violation_id>", methods=["PUT"])
@@ -1259,6 +1302,132 @@ def logout():
     session.pop("user", None)
     flash("You have been logged out.", "success")
     return redirect(url_for("login"))
+
+
+@app.route("/api/health")
+def health_check():
+    """Health check endpoint to verify Firebase and other services"""
+    health_status = {
+        "status": "healthy",
+        "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
+        "services": {}
+    }
+    
+    # Check Firebase connection
+    try:
+        if firebase_manager.db:
+            # Test Firebase by trying to get a document
+            test_docs = firebase_manager.get_documents("violations", limit=1)
+            health_status["services"]["firebase"] = {
+                "status": "connected",
+                "message": f"Successfully connected to Firestore. Found {len(test_docs)} test documents."
+            }
+        else:
+            health_status["services"]["firebase"] = {
+                "status": "disconnected",
+                "message": "Firebase not initialized. Check credentials."
+            }
+            health_status["status"] = "unhealthy"
+    except Exception as e:
+        health_status["services"]["firebase"] = {
+            "status": "error",
+            "message": f"Firebase connection error: {str(e)}"
+        }
+        health_status["status"] = "unhealthy"
+    
+    # Check Cloudinary connection
+    try:
+        from cloudinary_config import cloudinary
+        if cloudinary:
+            health_status["services"]["cloudinary"] = {
+                "status": "connected",
+                "message": "Cloudinary configuration loaded successfully."
+            }
+        else:
+            health_status["services"]["cloudinary"] = {
+                "status": "disconnected",
+                "message": "Cloudinary not configured."
+            }
+    except Exception as e:
+        health_status["services"]["cloudinary"] = {
+            "status": "error",
+            "message": f"Cloudinary error: {str(e)}"
+        }
+    
+    # Check environment variables
+    import os
+    env_vars = {
+        "FIREBASE_PROJECT_ID": os.getenv("FIREBASE_PROJECT_ID"),
+        "FIREBASE_PRIVATE_KEY": "***" if os.getenv("FIREBASE_PRIVATE_KEY") else None,
+        "FIREBASE_CLIENT_EMAIL": os.getenv("FIREBASE_CLIENT_EMAIL"),
+        "CLOUDINARY_CLOUD_NAME": os.getenv("CLOUDINARY_CLOUD_NAME"),
+        "CLOUDINARY_API_KEY": "***" if os.getenv("CLOUDINARY_API_KEY") else None,
+        "SECRET_KEY": "***" if os.getenv("SECRET_KEY") else None,
+    }
+    
+    health_status["environment"] = {
+        "variables_set": sum(1 for v in env_vars.values() if v is not None),
+        "total_variables": len(env_vars),
+        "variables": env_vars
+    }
+    
+    # Check cache status
+    health_status["cache"] = {
+        "entries": len(_cache),
+        "status": "active" if _cache else "empty"
+    }
+    
+    return health_status, 200 if health_status["status"] == "healthy" else 500
+
+
+@app.route("/api/test-violation", methods=["POST"])
+def test_violation_creation():
+    """Test endpoint to create a violation for debugging Railway deployment"""
+    if not session.get("user"):
+        return {"error": "Unauthorized"}, 401
+    
+    try:
+        print(f"[TEST] Testing violation creation on Railway")
+        
+        # Create a test violation
+        test_data = {
+            "student_name": "Test Student",
+            "student_id": "TEST001",
+            "violation_type": "Test Violation",
+            "course": "Test Grade",
+            "description": "This is a test violation for debugging Railway deployment",
+            "date": time.strftime('%Y-%m-%d'),
+            "reported_by": session.get("user", {}).get("name", "Test User"),
+            "severity": "Low",
+            "created_timestamp": time.strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        print(f"[TEST] Test data: {test_data}")
+        
+        # Check Firebase connection
+        if not firebase_manager.db:
+            return {"error": "Firebase not connected", "debug": "firebase_not_initialized"}, 500
+        
+        # Try to add the test violation
+        doc_id = add_to_firebase("violations", test_data)
+        
+        if doc_id:
+            print(f"[TEST] Test violation created successfully with ID: {doc_id}")
+            return {
+                "success": True, 
+                "message": "Test violation created successfully",
+                "violation_id": doc_id,
+                "test_data": test_data
+            }, 201
+        else:
+            print(f"[TEST] Failed to create test violation")
+            return {"error": "Failed to create test violation", "debug": "add_to_firebase_returned_none"}, 500
+            
+    except Exception as e:
+        print(f"[TEST] Test violation creation failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return {"error": f"Test failed: {str(e)}", "debug": "test_exception"}, 500
 
 
 # ============ Feature pages ============

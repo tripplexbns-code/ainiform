@@ -23,17 +23,16 @@ class FirebaseManager:
         try:
             # Check if Firebase is already initialized
             if not firebase_admin._apps:
-                # Try to use service account key file
-                service_account_path = "ServiceAccountKey.json"
-                
-                if os.path.exists(service_account_path):
-                    self.cred = credentials.Certificate(service_account_path)
-                    self.app = firebase_admin.initialize_app(self.cred)
-                    print("[OK] Firebase initialized with service account key")
-                else:
-                    # Use default credentials (for development)
-                    self.app = firebase_admin.initialize_app()
+                # Try Railway environment variables first
+                if self._try_railway_credentials():
+                    print("[OK] Firebase initialized with Railway environment variables")
+                elif self._try_service_account_file():
+                    print("[OK] Firebase initialized with service account key file")
+                elif self._try_default_credentials():
                     print("[OK] Firebase initialized with default credentials")
+                else:
+                    print("[ERROR] Failed to initialize Firebase with any method")
+                    return
                 
                 # Initialize Firestore
                 self.db = firestore.client()
@@ -119,7 +118,79 @@ class FirebaseManager:
             print("   1. Installed firebase-admin: pip install firebase-admin")
             print("   2. Set up Firebase project in Firebase Console")
             print("   3. Downloaded serviceAccountKey.json or set GOOGLE_APPLICATION_CREDENTIALS")
+            print("   4. For Railway: Set Firebase environment variables in Railway dashboard")
             self.db = None
+    
+    def _try_railway_credentials(self):
+        """Try to initialize Firebase using Railway environment variables"""
+        try:
+            project_id = os.getenv("FIREBASE_PROJECT_ID")
+            private_key_id = os.getenv("FIREBASE_PRIVATE_KEY_ID")
+            private_key = os.getenv("FIREBASE_PRIVATE_KEY")
+            client_email = os.getenv("FIREBASE_CLIENT_EMAIL")
+            client_id = os.getenv("FIREBASE_CLIENT_ID")
+            auth_uri = os.getenv("FIREBASE_AUTH_URI", "https://accounts.google.com/o/oauth2/auth")
+            token_uri = os.getenv("FIREBASE_TOKEN_URI", "https://oauth2.googleapis.com/token")
+            auth_provider_x509_cert_url = os.getenv("FIREBASE_AUTH_PROVIDER_X509_CERT_URL", "https://www.googleapis.com/oauth2/v1/certs")
+            client_x509_cert_url = os.getenv("FIREBASE_CLIENT_X509_CERT_URL")
+            
+            if not all([project_id, private_key_id, private_key, client_email, client_id]):
+                print("[DEBUG] Railway Firebase environment variables not complete")
+                return False
+            
+            # Fix private key formatting (Railway might strip newlines)
+            if private_key and "\\n" in private_key:
+                private_key = private_key.replace("\\n", "\n")
+            
+            service_account_info = {
+                "type": "service_account",
+                "project_id": project_id,
+                "private_key_id": private_key_id,
+                "private_key": private_key,
+                "client_email": client_email,
+                "client_id": client_id,
+                "auth_uri": auth_uri,
+                "token_uri": token_uri,
+                "auth_provider_x509_cert_url": auth_provider_x509_cert_url,
+                "client_x509_cert_url": client_x509_cert_url
+            }
+            
+            self.cred = credentials.Certificate(service_account_info)
+            self.app = firebase_admin.initialize_app(self.cred)
+            print(f"[DEBUG] Railway Firebase credentials loaded for project: {project_id}")
+            return True
+            
+        except Exception as e:
+            print(f"[DEBUG] Railway credentials failed: {e}")
+            return False
+    
+    def _try_service_account_file(self):
+        """Try to initialize Firebase using service account key file"""
+        try:
+            service_account_path = "ServiceAccountKey.json"
+            
+            if os.path.exists(service_account_path):
+                self.cred = credentials.Certificate(service_account_path)
+                self.app = firebase_admin.initialize_app(self.cred)
+                print(f"[DEBUG] Service account file loaded: {service_account_path}")
+                return True
+            else:
+                print("[DEBUG] ServiceAccountKey.json file not found")
+                return False
+                
+        except Exception as e:
+            print(f"[DEBUG] Service account file failed: {e}")
+            return False
+    
+    def _try_default_credentials(self):
+        """Try to initialize Firebase using default credentials"""
+        try:
+            self.app = firebase_admin.initialize_app()
+            print("[DEBUG] Default credentials loaded")
+            return True
+        except Exception as e:
+            print(f"[DEBUG] Default credentials failed: {e}")
+            return False
     
     def get_collection(self, collection_name):
         """Get a Firestore collection reference"""
