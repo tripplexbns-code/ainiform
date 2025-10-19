@@ -932,10 +932,6 @@ def api_delete_student_violations(student_name):
         if not student_violations:
             return {"success": True, "deleted_count": 0, "message": "No violations found for this student"}, 200
         
-        # Also get and delete related appeals for this student
-        appeals = get_from_firebase("appeals") or []
-        student_appeals = [a for a in appeals if a.get('student_name') == student_name]
-        
         # Delete each violation
         deleted_violations = 0
         failed_violations = 0
@@ -949,41 +945,21 @@ def api_delete_student_violations(student_name):
                 else:
                     failed_violations += 1
         
-        # Delete related appeals
-        deleted_appeals = 0
-        failed_appeals = 0
-        
-        for appeal in student_appeals:
-            appeal_id = appeal.get('id')
-            if appeal_id:
-                success = delete_appeal_from_firebase(appeal_id)
-                if success:
-                    deleted_appeals += 1
-                else:
-                    failed_appeals += 1
-        
         # Clear cache to force refresh
         clear_cache()
         
         # Prepare response message
-        total_deleted = deleted_violations + deleted_appeals
-        total_failed = failed_violations + failed_appeals
-        
-        message_parts = []
-        if deleted_violations > 0:
-            message_parts.append(f"{deleted_violations} violation(s)")
-        if deleted_appeals > 0:
-            message_parts.append(f"{deleted_appeals} appeal(s)")
+        total_deleted = deleted_violations
+        total_failed = failed_violations
         
         if total_failed == 0:
-            message = f"Successfully deleted {', '.join(message_parts)} for {student_name}"
+            message = f"Successfully deleted {deleted_violations} violation(s) for {student_name}"
         else:
-            message = f"Deleted {', '.join(message_parts)} for {student_name}, {total_failed} failed"
+            message = f"Deleted {deleted_violations} violation(s) for {student_name}, {total_failed} failed"
         
         return {
             "success": True, 
             "deleted_violations": deleted_violations,
-            "deleted_appeals": deleted_appeals,
             "total_deleted": total_deleted,
             "message": message
         }, 200

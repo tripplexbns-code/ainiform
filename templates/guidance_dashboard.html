@@ -2255,10 +2255,6 @@
                         <option value="Guidance">Guidance</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Resolution Notes</label>
-                    <textarea class="form-input form-textarea" id="editResolutionNotes" name="resolution_notes" placeholder="Add resolution notes or follow-up actions..."></textarea>
-                </div>
                 <div class="action-buttons">
                     <button type="submit" class="btn btn-primary">Update Violation</button>
                     <button type="button" class="btn btn-secondary" onclick="closeModal('editViolationModal')">Cancel</button>
@@ -3296,6 +3292,17 @@
 
         // Test function to test appeal modal
 
+        // Get current user function
+        function getCurrentUser() {
+            // Try to get user from session data or use a default
+            const userElement = document.querySelector('.user-info .user-name');
+            if (userElement) {
+                return userElement.textContent.trim();
+            }
+            // Fallback to session data if available
+            return '{{ user.name }}' || 'Unknown User';
+        }
+
         // Activity logging function
         function logActivity(type, category, title, description, details = '') {
             console.log(`[ACTIVITY LOG] Logging activity: ${type} - ${category} - ${title}`);
@@ -3308,7 +3315,7 @@
                 description: description,
                 details: details,
                 timestamp: new Date(),
-                user: 'Current User' // In real implementation, get from session
+                user: getCurrentUser() // Get actual current user
             };
             
             // Store in localStorage for persistence
@@ -5087,8 +5094,8 @@
         }
 
         function deleteAllStudentViolations(studentName) {
-            if (confirm(`⚠️ WARNING: This will delete ALL violations and appeals for ${studentName} permanently!\n\nThis includes:\n• All violation records\n• All related appeals\n• This action cannot be undone!\n\nAre you absolutely sure you want to continue?`)) {
-                if (confirm(`🚨 FINAL CONFIRMATION 🚨\n\nThis will permanently delete ALL data for ${studentName}!\n\nType "DELETE ALL" to confirm:`)) {
+            if (confirm(`⚠️ WARNING: This will delete ALL violations for ${studentName} permanently!\n\nThis includes:\n• All violation records\n• This action cannot be undone!\n\nAre you absolutely sure you want to continue?`)) {
+                if (confirm(`🚨 FINAL CONFIRMATION 🚨\n\nThis will permanently delete ALL violations for ${studentName}!\n\nType "DELETE ALL" to confirm:`)) {
                     // Show loading indicator
                     showLoading();
                     
@@ -5114,6 +5121,11 @@
                                 if (deletedViolations > 0) parts.push(`${deletedViolations} violation(s)`);
                                 if (deletedAppeals > 0) parts.push(`${deletedAppeals} appeal(s)`);
                                 message += parts.join(' and ') + ` for ${studentName}!`;
+                                
+                                // Log the activity
+                                logActivity('delete', 'violation', 'Student Violations Deleted', 
+                                    `All violations deleted for student: ${studentName}`, 
+                                    `Student: ${studentName}, Violations deleted: ${deletedViolations}, Deleted by: ${getCurrentUser()}`);
                                 
                                 showAlert(message, 'success');
                                 // Refresh the page to show updated data
