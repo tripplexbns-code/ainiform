@@ -72,57 +72,9 @@ def get_cached_data(collection_name, limit=20):
 def get_sample_data(collection_name):
     """Get sample data for demonstration purposes"""
     sample_data = {
-        'violations': [
-            {
-                'id': 'sample_1',
-                'student_name': 'John Smith',
-                'student_id': 'STU001',
-                'violation_type': 'Improper Uniform',
-                'course': 'Grade 10',
-                'date': '2025-09-27',
-                'description': 'Wearing non-regulation shoes',
-                'status': 'Pending',
-                'reported_by': 'Mrs. Sarah Johnson'
-            },
-            {
-                'id': 'sample_2',
-                'student_name': 'Maria Garcia',
-                'student_id': 'STU002',
-                'violation_type': 'Missing ID',
-                'course': 'Grade 11',
-                'date': '2025-09-26',
-                'description': 'Student not wearing school ID',
-                'status': 'Resolved',
-                'reported_by': 'Ms. Emily Chen'
-            }
-        ],
-        'appeals': [
-            {
-                'id': 'appeal_1',
-                'student_name': 'John Smith',
-                'student_id': 'STU001',
-                'violation_id': 'violation_001',
-                'appeal_date': '2025-09-27',
-                'reason': 'Medical condition requires special footwear',
-                'status': 'Pending Review',
-                'submitted_by': 'John Smith',
-                'priority': 'High'
-            }
-        ],
-        'uniform_designs': [
-            {
-                'id': 'design_1',
-                'name': 'Modern Blazer Design',
-                'type': 'Complete Set',
-                'course': 'All Grades',
-                'colors': 'Navy blue with silver accents',
-                'submitted_date': '2025-09-20',
-                'status': 'Under Review',
-                'designer': 'Fashion Club',
-                'description': 'A modern take on the traditional school blazer',
-                'image_url': ''
-            }
-        ]
+        'violations': [],
+        'appeals': [],
+        'uniform_designs': [],
     }
     
     return sample_data.get(collection_name, [])
@@ -616,60 +568,20 @@ def add_sample_data_to_firebase():
         return redirect(url_for("login"))
     
     try:
-        # Add sample violations
-        violations = [
-            {
-                'student_name': 'John Michael Santos',
-                'student_id': 'STU2024-001',
-                'violation_type': 'Improper Uniform',
-                'course': 'Grade 10 - Einstein',
-                'date': '2025-09-27',
-                'description': 'Student was wearing non-regulation black shoes instead of white school shoes',
-                'status': 'Pending',
-                'reported_by': 'Mrs. Sarah Johnson'
-            },
-            {
-                'student_name': 'Maria Isabella Garcia',
-                'student_id': 'STU2024-002',
-                'violation_type': 'Missing ID',
-                'course': 'Grade 11 - Newton',
-                'date': '2025-09-26',
-                'description': 'Student not wearing school ID card as required',
-                'status': 'Resolved',
-                'reported_by': 'Ms. Emily Chen'
-            }
-        ]
+        # Add sample violations (empty for clean display)
+        violations = []
         
         for violation in violations:
             add_to_firebase('violations', violation)
         
-        # Add sample appeals
-        appeals = [
-            {
-                'student_name': 'Maria Isabella Garcia',
-                'student_id': 'STU2024-002',
-                'violation_id': 'violation_001',
-                'appeal_reason': 'ID card was lost during lunch break, replacement is being processed',
-                'status': 'Under Review',
-                'submitted_date': '2025-09-26',
-                'submitted_by': 'Maria Isabella Garcia'
-            }
-        ]
+        # Add sample appeals (empty for clean display)
+        appeals = []
         
         for appeal in appeals:
             add_to_firebase('appeals', appeal)
         
-        # Add sample designs
-        designs = [
-            {
-                'design_name': 'Official School Uniform 2024',
-                'description': 'Standard white polo shirt with school logo and navy blue pants/skirt',
-                'category': 'Formal',
-                'status': 'Active',
-                'created_date': '2025-09-01',
-                'created_by': 'Admin'
-            }
-        ]
+        # Add sample designs (empty for clean display)
+        designs = []
         
         for design in designs:
             add_to_firebase('uniform_designs', design)
