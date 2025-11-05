@@ -101,6 +101,7 @@ def get_student_violations_from_firebase():
                 'status': sv.get('status', 'Pending'),
                 'reported_by': sv.get('reported_by', 'System'),
                 'severity': sv.get('severity', 'Medium'),
+                'last_updated': sv.get('last_updated', ''),  # Include last_updated from Firebase
                 'source': 'student_violations'  # Mark as coming from student_violations collection
             }
             formatted_violations.append(formatted_violation)

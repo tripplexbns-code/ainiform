@@ -4603,11 +4603,46 @@
                 
                 let detailsHtml = '<div style="margin-bottom: 10px;"><strong>All Violations for ' + studentName + ':</strong></div>';
                 studentViolations.forEach((violation, index) => {
+                    // Format date and time from last_updated
+                    let dateDisplay = '';
+                    let timeDisplay = '';
+                    if (violation.last_updated) {
+                        try {
+                            // Parse last_updated format: "YYYY-MM-DD HH:MM:SS"
+                            const lastUpdated = violation.last_updated;
+                            const dateTimeParts = lastUpdated.split(' ');
+                            if (dateTimeParts.length >= 2) {
+                                const datePart = dateTimeParts[0];
+                                const timePart = dateTimeParts[1];
+                                // Format date as MM/DD/YYYY
+                                const dateObj = new Date(datePart + 'T' + timePart);
+                                dateDisplay = dateObj.toLocaleDateString('en-US', {month: '2-digit', day: '2-digit', year: 'numeric'});
+                                // Format time as HH:MM
+                                timeDisplay = timePart.substring(0, 5);
+                            }
+                        } catch (e) {
+                            console.error('Error parsing last_updated:', e);
+                        }
+                    }
+                    // Fallback to date field if last_updated is not available
+                    if (!dateDisplay && violation.date) {
+                        try {
+                            const dateObj = new Date(violation.date);
+                            dateDisplay = dateObj.toLocaleDateString('en-US', {month: '2-digit', day: '2-digit', year: 'numeric'});
+                        } catch (e) {
+                            dateDisplay = violation.date;
+                        }
+                    }
+                    
                     detailsHtml += `
                         <div class="violation-item">
                             <div class="violation-info">
                                 <strong>${violation.violation_type || 'Unknown Type'}</strong> - 
                                 <span class="status-badge status-${(violation.status || 'Active').toLowerCase()}">${violation.status || 'Active'}</span>
+                                ${dateDisplay ? `<div style="margin-top: 5px; color: #666; font-size: 12px; text-align: center;">
+                                    <div>${dateDisplay}</div>
+                                    ${timeDisplay ? `<div style="color: rgba(255, 255, 255, 0.6); font-size: 11px; text-align: center; margin-top: 2px; opacity: 0.7;">${timeDisplay}</div>` : ''}
+                                </div>` : ''}
                             </div>
                             <div class="violation-actions">
                                 <button class="btn btn-sm btn-secondary" onclick="editViolation('${violation.id}')">Edit</button>
@@ -5256,13 +5291,48 @@
                         </div>
                         <div class="modal-body">
                             <div class="violations-list">
-                                ${violations.map((violation, index) => `
+                                ${violations.map((violation, index) => {
+                                    // Format date and time from last_updated
+                                    let dateDisplay = '';
+                                    let timeDisplay = '';
+                                    if (violation.last_updated) {
+                                        try {
+                                            // Parse last_updated format: "YYYY-MM-DD HH:MM:SS"
+                                            const lastUpdated = violation.last_updated;
+                                            const dateTimeParts = lastUpdated.split(' ');
+                                            if (dateTimeParts.length >= 2) {
+                                                const datePart = dateTimeParts[0];
+                                                const timePart = dateTimeParts[1];
+                                                // Format date as MM/DD/YYYY
+                                                const dateObj = new Date(datePart + 'T' + timePart);
+                                                dateDisplay = dateObj.toLocaleDateString('en-US', {month: '2-digit', day: '2-digit', year: 'numeric'});
+                                                // Format time as HH:MM
+                                                timeDisplay = timePart.substring(0, 5);
+                                            }
+                                        } catch (e) {
+                                            console.error('Error parsing last_updated:', e);
+                                        }
+                                    }
+                                    // Fallback to date field if last_updated is not available
+                                    if (!dateDisplay && violation.date) {
+                                        try {
+                                            const dateObj = new Date(violation.date);
+                                            dateDisplay = dateObj.toLocaleDateString('en-US', {month: '2-digit', day: '2-digit', year: 'numeric'});
+                                        } catch (e) {
+                                            dateDisplay = violation.date;
+                                        }
+                                    }
+                                    
+                                    return `
                                     <div class="violation-item">
                                         <div class="violation-header">
                                             <span class="violation-number">#${index + 1}</span>
                                             <div class="violation-type-container">
                                                 <span class="violation-type">${violation.violation_type || 'Incomplete Uniform'}</span>
-                                                <span class="violation-date">${violation.date ? new Date(violation.date).toLocaleDateString('en-US', {month: '2-digit', day: '2-digit', year: 'numeric'}) : 'No date'}</span>
+                                                <span class="violation-date" style="text-align: center; display: block;">
+                                                    ${dateDisplay || 'No date'}
+                                                    ${timeDisplay ? `<div style="font-size: 11px; color: rgba(255, 255, 255, 0.6); margin-top: 2px; text-align: center; opacity: 0.7;">${timeDisplay}</div>` : ''}
+                                                </span>
                                             </div>
                                             <span class="violation-status status-${(violation.status || 'Warning').toLowerCase().replace(/[^a-z0-9]/g, '-')}">${violation.status || 'Warning'}</span>
                                         </div>
@@ -5274,7 +5344,8 @@
                                             <button class="btn btn-sm btn-danger" onclick="deleteViolation('${violation.id}')">Delete</button>
                                         </div>
                                     </div>
-                                `).join('')}
+                                `;
+                                }).join('')}
                             </div>
                         </div>
                         <div class="modal-footer">
