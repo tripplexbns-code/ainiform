@@ -80,6 +80,71 @@ def get_sample_data(collection_name):
     return sample_data.get(collection_name, [])
 
 
+def get_student_violations_from_firebase():
+    """Fetch student violations from Firebase and format them for display"""
+    try:
+        # Fetch from student_violations collection
+        student_violations = get_from_firebase("student_violations") or []
+        
+        # Format the data to match violations table structure
+        formatted_violations = []
+        for sv in student_violations:
+            # Extract name and student_id from student_violations
+            formatted_violation = {
+                'id': sv.get('id', ''),
+                'student_name': sv.get('name', sv.get('student_name', 'N/A')),
+                'student_id': sv.get('student_id', 'N/A'),
+                'violation_type': sv.get('violation_type', 'Uniform Violation'),
+                'course': sv.get('course', ''),
+                'date': sv.get('date', sv.get('created_at', '')),
+                'description': sv.get('description', 'Student violation'),
+                'status': sv.get('status', 'Pending'),
+                'reported_by': sv.get('reported_by', 'System'),
+                'severity': sv.get('severity', 'Medium'),
+                'source': 'student_violations'  # Mark as coming from student_violations collection
+            }
+            formatted_violations.append(formatted_violation)
+        
+        print(f"[OK] Retrieved {len(formatted_violations)} violations from student_violations collection")
+        return formatted_violations
+    except Exception as e:
+        print(f"[ERROR] Error fetching student_violations: {e}")
+        return []
+
+
+def get_student_violations_as_appeals():
+    """Fetch student violations from Firebase and format them as appeals"""
+    try:
+        # Fetch from student_violations collection
+        student_violations = get_from_firebase("student_violations") or []
+        
+        # Format the data to match appeals table structure
+        formatted_appeals = []
+        for sv in student_violations:
+            # Extract name and student_id from student_violations and format as appeal
+            formatted_appeal = {
+                'id': sv.get('id', ''),
+                'student_name': sv.get('name', sv.get('student_name', 'N/A')),
+                'student_id': sv.get('student_id', 'N/A'),
+                'violation_id': sv.get('id', ''),  # Use the same ID as violation_id
+                'appeal_date': sv.get('date', sv.get('appeal_date', sv.get('created_at', ''))),
+                'appeal_reason': sv.get('appeal_reason', sv.get('reason', sv.get('description', 'Appeal for violation'))),
+                'reason': sv.get('appeal_reason', sv.get('reason', sv.get('description', 'Appeal for violation'))),
+                'status': sv.get('appeal_status', sv.get('status', 'Pending Review')),
+                'submitted_by': sv.get('submitted_by', sv.get('student_name', sv.get('name', 'Student'))),
+                'priority': sv.get('priority', 'Medium'),
+                'reason_type': sv.get('reason_type', 'Unexcused'),
+                'source': 'student_violations'  # Mark as coming from student_violations collection
+            }
+            formatted_appeals.append(formatted_appeal)
+        
+        print(f"[OK] Retrieved {len(formatted_appeals)} appeals from student_violations collection")
+        return formatted_appeals
+    except Exception as e:
+        print(f"[ERROR] Error fetching student_violations as appeals: {e}")
+        return []
+
+
 def clear_cache():
     """Clear the cache"""
     with _cache_lock:
@@ -624,8 +689,14 @@ def api_violations():
         try:
             # Get all violations from Firebase
             violations = get_from_firebase("violations") or []
-            print(f"[API] GET /api/violations returning {len(violations)} violations")
-            return {"success": True, "data": violations}, 200
+            # Get student violations from student_violations collection
+            student_violations = get_student_violations_from_firebase()
+            
+            # Merge both collections
+            all_violations = violations + student_violations
+            
+            print(f"[API] GET /api/violations returning {len(all_violations)} violations (from violations: {len(violations)}, from student_violations: {len(student_violations)})")
+            return {"success": True, "data": all_violations}, 200
         except Exception as e:
             print(f"[ERROR] GET /api/violations failed: {e}")
             return {"error": str(e)}, 500
@@ -889,17 +960,23 @@ def api_appeals():
         try:
             # Get all appeals from Firebase
             appeals = get_from_firebase("appeals") or []
-            print(f"[API] GET /api/appeals returning {len(appeals)} appeals")
+            # Get student violations formatted as appeals from student_violations collection
+            student_violations_appeals = get_student_violations_as_appeals()
+            
+            # Merge both collections
+            all_appeals = appeals + student_violations_appeals
+            
+            print(f"[API] GET /api/appeals returning {len(all_appeals)} appeals (from appeals: {len(appeals)}, from student_violations: {len(student_violations_appeals)})")
             
             # Debug: Print first few appeals to see their structure
-            if appeals:
-                print(f"[DEBUG] First appeal structure: {appeals[0]}")
-                print(f"[DEBUG] Appeal IDs: {[a.get('id', 'NO_ID') for a in appeals[:5]]}")
+            if all_appeals:
+                print(f"[DEBUG] First appeal structure: {all_appeals[0]}")
+                print(f"[DEBUG] Appeal IDs: {[a.get('id', 'NO_ID') for a in all_appeals[:5]]}")
             
             # Migrate existing appeals to include reason_type if missing
             appeals_to_update = []
             
-            for appeal in appeals:
+            for appeal in appeals:  # Only update appeals from the appeals collection
                 if 'reason_type' not in appeal or not appeal['reason_type']:
                     appeal['reason_type'] = 'Unexcused'
                     if 'id' in appeal:
@@ -915,7 +992,7 @@ def api_appeals():
                         print(f"[WARN] Failed to update appeal {appeal['id']}: {e}")
                 clear_cache()
             
-            return {"success": True, "data": appeals}, 200
+            return {"success": True, "data": all_appeals}, 200
         except Exception as e:
             return {"error": str(e)}, 500
     
@@ -956,25 +1033,53 @@ def api_update_appeal(appeal_id):
         if 'reason_type' not in data or not data['reason_type']:
             data['reason_type'] = 'Unexcused'
         
+        # Determine which collection contains this appeal
+        appeal = None
+        collection_name = None
+        
+        # First check in appeals collection
+        appeals = get_from_firebase("appeals") or []
+        appeal = next((a for a in appeals if a.get('id') == appeal_id), None)
+        if appeal:
+            collection_name = "appeals"
+            print(f"[INFO] Appeal {appeal_id} found in appeals collection")
+        else:
+            # Check in student_violations collection
+            student_violations = get_from_firebase("student_violations") or []
+            appeal = next((sv for sv in student_violations if sv.get('id') == appeal_id), None)
+            if appeal:
+                collection_name = "student_violations"
+                print(f"[INFO] Appeal {appeal_id} found in student_violations collection")
+        
+        if not appeal:
+            print(f"[ERROR] Appeal {appeal_id} not found in any collection")
+            return {"error": f"Appeal {appeal_id} not found"}, 404
+        
         # Check if appeal is being approved
         violation_deleted = False
         if data.get('status') == 'Approved' and AUTO_DELETE_VIOLATIONS_ON_APPEAL_APPROVAL:
             print(f"[REFRESH] Appeal {appeal_id} is being approved - checking for related violation to delete...")
-            # Get the appeal data to find the related violation
             try:
-                appeals = get_from_firebase("appeals") or []
-                appeal = next((a for a in appeals if a.get('id') == appeal_id), None)
+                # Get violation_id from the appeal
+                violation_id = appeal.get('violation_id') or appeal.get('id')  # For student_violations, the id is the violation_id
                 
-                if appeal and appeal.get('violation_id'):
-                    violation_id = appeal['violation_id']
+                if violation_id:
                     print(f"[SEARCH] Found related violation {violation_id} for appeal {appeal_id}")
                     
-                    # Delete the related violation
+                    # Delete the related violation from violations collection
                     violation_deleted = delete_from_firebase("violations", violation_id)
                     if violation_deleted:
                         print(f"[OK] Successfully deleted violation {violation_id} for approved appeal {appeal_id}")
                     else:
-                        print(f"[WARN] Failed to delete violation {violation_id} for approved appeal {appeal_id}")
+                        # Also try deleting from student_violations if it's a student_violations appeal
+                        if collection_name == "student_violations":
+                            violation_deleted = delete_from_firebase("student_violations", violation_id)
+                            if violation_deleted:
+                                print(f"[OK] Successfully deleted student_violation {violation_id} for approved appeal {appeal_id}")
+                            else:
+                                print(f"[WARN] Failed to delete violation {violation_id} for approved appeal {appeal_id}")
+                        else:
+                            print(f"[WARN] Failed to delete violation {violation_id} for approved appeal {appeal_id}")
                 else:
                     print(f"[WARN] No violation_id found for appeal {appeal_id} - skipping violation deletion")
             except Exception as e:
@@ -982,15 +1087,27 @@ def api_update_appeal(appeal_id):
         elif data.get('status') == 'Approved' and not AUTO_DELETE_VIOLATIONS_ON_APPEAL_APPROVAL:
             print(f"[INFO] Appeal {appeal_id} approved but auto-deletion is disabled")
         
-        # Update appeal in Firebase
-        success = update_appeal_in_firebase(appeal_id, data)
+        # Map status field for student_violations
+        if collection_name == "student_violations":
+            # For student_violations, use appeal_status field
+            if 'status' in data:
+                data['appeal_status'] = data['status']
+                # Also keep status for compatibility
+            print(f"[INFO] Updating student_violation {appeal_id} with status: {data.get('status')}")
+        
+        # Update appeal in the correct collection
+        success = update_in_firebase(collection_name, appeal_id, data)
         if success:
             # Clear cache to force refresh
             clear_cache()
             return {"success": True, "violation_deleted": violation_deleted}, 200
         else:
-            return {"error": "Failed to update appeal"}, 500
+            print(f"[ERROR] Failed to update appeal {appeal_id} in {collection_name} collection")
+            return {"error": f"Failed to update appeal in {collection_name}"}, 500
     except Exception as e:
+        print(f"[ERROR] Exception in api_update_appeal: {e}")
+        import traceback
+        traceback.print_exc()
         return {"error": str(e)}, 500
 
 @app.route("/api/appeals/<appeal_id>", methods=["DELETE"])
@@ -1142,9 +1259,17 @@ def dashboard():
     # Use cached data for better performance with fallback
     try:
         violations = get_cached_data("violations", 20)
+        # Also fetch student violations from student_violations collection
+        student_violations = get_student_violations_from_firebase()
+        # Merge both collections for dashboard display
+        violations = violations + student_violations
         appeals = get_cached_data("appeals", 20)
+        # Also fetch student violations formatted as appeals from student_violations collection
+        student_violations_appeals = get_student_violations_as_appeals()
+        # Merge both collections for dashboard display
+        appeals = appeals + student_violations_appeals
         designs = get_cached_data("uniform_designs", 20)
-        print(f"[STATS] Loaded data - Violations: {len(violations)}, Appeals: {len(appeals)}, Designs: {len(designs)}")
+        print(f"[STATS] Loaded data - Violations: {len(violations)} (includes {len(student_violations)} from student_violations), Appeals: {len(appeals)} (includes {len(student_violations_appeals)} from student_violations), Designs: {len(designs)}")
     except Exception as e:
         print(f"[WARN] Error loading dashboard data: {e}")
         # Fallback to empty data
@@ -1354,11 +1479,19 @@ def violations_page():
                 flash("Failed to save violation", "error")
         return redirect(url_for("violations_page"))
 
-    items = get_from_firebase("violations") or []
+    # Get violations from both collections
+    violations_items = get_from_firebase("violations") or []
+    student_violations_items = get_student_violations_from_firebase()
+    
+    # Merge both collections
+    items = violations_items + student_violations_items
+    
     # Add document IDs to items for action buttons
     for i, item in enumerate(items):
         if 'id' not in item:
             item['id'] = f"violation_{i}"  # Fallback ID if not available
+    
+    print(f"[INFO] Total violations displayed: {len(items)} (from violations: {len(violations_items)}, from student_violations: {len(student_violations_items)})")
     return render_template("violations.html", user=session.get("user"), items=items)
 
 
@@ -1464,11 +1597,19 @@ def appeals_page():
                 flash("Failed to save appeal", "error")
         return redirect(url_for("appeals_page"))
 
-    items = get_from_firebase("appeals") or []
+    # Get appeals from both collections
+    appeals_items = get_from_firebase("appeals") or []
+    student_violations_appeals = get_student_violations_as_appeals()
+    
+    # Merge both collections
+    items = appeals_items + student_violations_appeals
+    
     # Add document IDs to items for action buttons
     for i, item in enumerate(items):
         if 'id' not in item:
             item['id'] = f"appeal_{i}"  # Fallback ID if not available
+    
+    print(f"[INFO] Total appeals displayed: {len(items)} (from appeals: {len(appeals_items)}, from student_violations: {len(student_violations_appeals)})")
     return render_template("appeals.html", user=session.get("user"), items=items)
 
 
