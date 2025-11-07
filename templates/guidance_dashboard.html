@@ -5323,6 +5323,19 @@
                                         }
                                     }
                                     
+                                    // Format last_missing_items as numbered list
+                                    let missingItemsContent = '';
+                                    if (violation.last_missing_items && Array.isArray(violation.last_missing_items) && violation.last_missing_items.length > 0) {
+                                        const missingItemsHtml = violation.last_missing_items.map((item, idx) => {
+                                            // Escape HTML in item text
+                                            const escapedItem = String(item).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+                                            return `${idx + 1}. ${escapedItem}`;
+                                        }).join('<br>');
+                                        missingItemsContent = missingItemsHtml;
+                                    } else {
+                                        missingItemsContent = 'No missing items information available';
+                                    }
+                                    
                                     return `
                                     <div class="violation-item">
                                         <div class="violation-header">
@@ -5337,7 +5350,8 @@
                                             <span class="violation-status status-${(violation.status || 'Warning').toLowerCase().replace(/[^a-z0-9]/g, '-')}">${violation.status || 'Warning'}</span>
                                         </div>
                                         <div class="violation-details">
-                                            <p><strong>Description:</strong> ${violation.description || 'No description provided'}</p>
+                                            <p><strong>Missing Items:</strong></p>
+                                            <p style="margin-top: 5px;">${missingItemsContent}</p>
                                         </div>
                                         <div class="violation-actions">
                                             <button class="btn btn-sm btn-secondary" onclick="editViolationFromModal('${violation.id}', '${(violation.student_name || '').replace(/'/g, "\\'")}', '${(violation.violation_type || 'Incomplete Uniform').replace(/'/g, "\\'")}', '${(violation.description || '').replace(/'/g, "\\'")}', '${(violation.status || 'Warning').replace(/'/g, "\\'")}')">Edit</button>

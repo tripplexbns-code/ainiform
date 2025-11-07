@@ -102,6 +102,7 @@ def get_student_violations_from_firebase():
                 'reported_by': sv.get('reported_by', 'System'),
                 'severity': sv.get('severity', 'Medium'),
                 'last_updated': sv.get('last_updated', ''),  # Include last_updated from Firebase
+                'last_missing_items': sv.get('last_missing_items', []),  # Include last_missing_items from Firebase
                 'source': 'student_violations'  # Mark as coming from student_violations collection
             }
             formatted_violations.append(formatted_violation)
@@ -605,14 +606,19 @@ def login():
         # Login OK → put minimal user in session
         print(f"[OK] Login successful: {username}")
         session.permanent = True
+        user_role = user.get("role", "guidance")
         session["user"] = {
             "id": user.get("id"),
             "username": user.get("username"),
             "name": user.get("full_name") or user.get("username"),
-            "role": user.get("role", "Guidance Counselor"),
+            "role": user_role,
         }
         flash("Welcome back!", "success")
-        return redirect(url_for("loading"))
+        # Redirect based on user role
+        if user_role.lower() == "admin":
+            return redirect(url_for("admin_dashboard"))
+        else:
+            return redirect(url_for("loading"))
 
     # GET
     return render_template("login.html")
@@ -1307,6 +1313,56 @@ def dashboard():
         violations=violations[:5],  # Show only recent 5
         appeals=appeals[:5],  # Show only recent 5
         designs=designs,  # Pass all designs for details view
+        stats=stats
+    )
+
+
+@app.route("/admin-dashboard")
+def admin_dashboard():
+    """Admin dashboard showing only uniform designs"""
+    if not require_login():
+        return redirect(url_for("login"))
+
+    user = session.get("user")
+    if not user:
+        print("[ERROR] No user in session, redirecting to login")
+        return redirect(url_for("login"))
+    
+    # Check if user is admin
+    if user.get("role", "").lower() != "admin":
+        flash("Access denied. Admin access required.", "error")
+        return redirect(url_for("dashboard"))
+    
+    print(f"[ADMIN DASHBOARD] Dashboard loading for admin: {user.get('username', 'unknown')}")
+
+    # Use cached data for uniform designs only
+    try:
+        designs = get_cached_data("uniform_designs", 20)
+        print(f"[STATS] Loaded data - Designs: {len(designs)}")
+    except Exception as e:
+        print(f"[WARN] Error loading admin dashboard data: {e}")
+        # Fallback to empty data
+        designs = []
+
+    # Calculate statistics for designs only
+    total_designs = len(designs)
+    approved_designs = len([d for d in designs if d.get('status') == 'Approved'])
+    pending_designs = len([d for d in designs if d.get('status') == 'Under Review' or d.get('status') == 'Pending Review'])
+    rejected_designs = len([d for d in designs if d.get('status') == 'Rejected'])
+
+    stats = {
+        'total_designs': total_designs,
+        'approved_designs': approved_designs,
+        'pending_designs': pending_designs,
+        'rejected_designs': rejected_designs,
+        'approval_rate': round((approved_designs / total_designs * 100) if total_designs > 0 else 0, 1)
+    }
+
+    print(f"[OK] Admin dashboard ready for user: {user.get('username', 'unknown')}")
+    return render_template(
+        "admin_dashboard.html",
+        user=user,
+        designs=designs,  # Pass all designs
         stats=stats
     )
 
