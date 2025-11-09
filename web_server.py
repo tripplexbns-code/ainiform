@@ -394,12 +394,116 @@ def update_violation_in_firebase(violation_id, data):
         return False
 
 
-def delete_violation_from_firebase(violation_id):
-    """Delete violation from Firebase"""
+def cleanup_student_document_if_no_violations(student_name, student_id):
+    """Check if student has any remaining violations and delete all student documents if none exist"""
     try:
-        return delete_from_firebase("violations", violation_id)
+        # Get all remaining violations from student_violations collection (fresh fetch after deletions)
+        student_violations = get_from_firebase("student_violations") or []
+        
+        # Check if there are any remaining violations for this student
+        remaining_violations = [
+            v for v in student_violations 
+            if (v.get('name') == student_name or v.get('student_name') == student_name) and 
+               v.get('student_id') == student_id
+        ]
+        
+        # If no violations remain, delete all remaining student documents for this student
+        if not remaining_violations:
+            print(f"[CLEANUP] No remaining violations for student {student_name} ({student_id}) - cleaning up all student documents")
+            
+            # Find all documents for this student that might still exist
+            # This catches any documents that weren't deleted in the previous step
+            all_student_docs = get_from_firebase("student_violations") or []
+            student_documents_to_delete = [
+                v for v in all_student_docs 
+                if (v.get('name') == student_name or v.get('student_name') == student_name) and 
+                   v.get('student_id') == student_id
+            ]
+            
+            # Delete all remaining student documents
+            deleted_count = 0
+            for doc in student_documents_to_delete:
+                doc_id = doc.get('id')
+                if doc_id:
+                    try:
+                        success = delete_from_firebase("student_violations", doc_id)
+                        if success:
+                            deleted_count += 1
+                            print(f"[CLEANUP] Deleted remaining student document {doc_id} for {student_name}")
+                    except Exception as e:
+                        print(f"[WARN] Error deleting student document {doc_id}: {e}")
+            
+            if deleted_count > 0:
+                print(f"[CLEANUP] Cleaned up {deleted_count} remaining student document(s) for {student_name}")
+                return True
+            else:
+                print(f"[CLEANUP] No remaining documents to clean up for {student_name}")
+        else:
+            print(f"[CLEANUP] Student {student_name} still has {len(remaining_violations)} violation(s) - keeping documents")
+        
+        return False
     except Exception as e:
-        print(f"Error deleting violation: {e}")
+        print(f"[ERROR] Error cleaning up student documents: {e}")
+        return False
+
+
+def delete_violation_from_firebase(violation_id):
+    """Delete violation from Firebase - checks both violations and student_violations collections"""
+    try:
+        deleted_from_violations = False
+        deleted_from_student_violations = False
+        student_name = None
+        student_id = None
+        
+        # First, try to get student info from the violation before deleting
+        try:
+            # Try to get violation info from violations collection
+            violations = get_from_firebase("violations") or []
+            violation = next((v for v in violations if v.get('id') == violation_id), None)
+            if violation:
+                student_name = violation.get('student_name')
+                student_id = violation.get('student_id')
+            
+            # If not found, try student_violations collection
+            if not student_name:
+                student_violations = get_from_firebase("student_violations") or []
+                violation = next((v for v in student_violations if v.get('id') == violation_id), None)
+                if violation:
+                    student_name = violation.get('name') or violation.get('student_name')
+                    student_id = violation.get('student_id')
+        except Exception as e:
+            print(f"[WARN] Could not fetch student info before deletion: {e}")
+        
+        # Try to delete from violations collection
+        try:
+            deleted_from_violations = delete_from_firebase("violations", violation_id)
+            if deleted_from_violations:
+                print(f"[OK] Deleted violation {violation_id} from violations collection")
+        except Exception as e:
+            print(f"[WARN] Error deleting from violations collection: {e}")
+        
+        # Also try to delete from student_violations collection
+        try:
+            deleted_from_student_violations = delete_from_firebase("student_violations", violation_id)
+            if deleted_from_student_violations:
+                print(f"[OK] Deleted violation {violation_id} from student_violations collection")
+        except Exception as e:
+            print(f"[WARN] Error deleting from student_violations collection: {e}")
+        
+        # Return True if deleted from at least one collection
+        if deleted_from_violations or deleted_from_student_violations:
+            print(f"[OK] Violation {violation_id} deleted successfully (violations: {deleted_from_violations}, student_violations: {deleted_from_student_violations})")
+            
+            # Clean up student document if no violations remain
+            if student_name and student_id:
+                cleanup_student_document_if_no_violations(student_name, student_id)
+            
+            return True
+        else:
+            print(f"[WARN] Violation {violation_id} not found in either collection")
+            return False
+    except Exception as e:
+        print(f"[ERROR] Error deleting violation: {e}")
         return False
 
 
@@ -908,32 +1012,52 @@ def api_delete_violation(violation_id):
 
 @app.route("/api/violations/student/<student_name>", methods=["DELETE"])
 def api_delete_student_violations(student_name):
-    """API endpoint to delete all violations for a specific student"""
+    """API endpoint to delete all violations for a specific student from both collections"""
     if not session.get("user"):
         return {"error": "Unauthorized"}, 401
     
     try:
-        # Get all violations
+        # Get all violations from both collections
         violations = get_from_firebase("violations") or []
+        student_violations_list = get_from_firebase("student_violations") or []
         
-        # Filter violations for this student
-        student_violations = [v for v in violations if v.get('student_name') == student_name]
+        # Filter violations for this student from both collections
+        violations_from_collection = [v for v in violations if v.get('student_name') == student_name]
+        violations_from_student_collection = [v for v in student_violations_list if v.get('name') == student_name or v.get('student_name') == student_name]
         
-        if not student_violations:
+        # Combine all violation IDs to delete
+        all_violation_ids = set()
+        for v in violations_from_collection:
+            if v.get('id'):
+                all_violation_ids.add(v.get('id'))
+        for v in violations_from_student_collection:
+            if v.get('id'):
+                all_violation_ids.add(v.get('id'))
+        
+        if not all_violation_ids:
             return {"success": True, "deleted_count": 0, "message": "No violations found for this student"}, 200
         
-        # Delete each violation
+        # Get student_id from the first violation for cleanup
+        student_id = None
+        if violations_from_collection:
+            student_id = violations_from_collection[0].get('student_id')
+        elif violations_from_student_collection:
+            student_id = violations_from_student_collection[0].get('student_id')
+        
+        # Delete each violation (this will check both collections automatically)
         deleted_violations = 0
         failed_violations = 0
         
-        for violation in student_violations:
-            violation_id = violation.get('id')
-            if violation_id:
-                success = delete_violation_from_firebase(violation_id)
-                if success:
-                    deleted_violations += 1
-                else:
-                    failed_violations += 1
+        for violation_id in all_violation_ids:
+            success = delete_violation_from_firebase(violation_id)
+            if success:
+                deleted_violations += 1
+            else:
+                failed_violations += 1
+        
+        # Clean up student document if all violations are deleted
+        if student_id and deleted_violations > 0:
+            cleanup_student_document_if_no_violations(student_name, student_id)
         
         # Clear cache to force refresh
         clear_cache()
@@ -1275,22 +1399,18 @@ def dashboard():
         student_violations_appeals = get_student_violations_as_appeals()
         # Merge both collections for dashboard display
         appeals = appeals + student_violations_appeals
-        designs = get_cached_data("uniform_designs", 20)
-        print(f"[STATS] Loaded data - Violations: {len(violations)} (includes {len(student_violations)} from student_violations), Appeals: {len(appeals)} (includes {len(student_violations_appeals)} from student_violations), Designs: {len(designs)}")
+        print(f"[STATS] Loaded data - Violations: {len(violations)} (includes {len(student_violations)} from student_violations), Appeals: {len(appeals)} (includes {len(student_violations_appeals)} from student_violations)")
     except Exception as e:
         print(f"[WARN] Error loading dashboard data: {e}")
         # Fallback to empty data
         violations = []
         appeals = []
-        designs = []
 
     # Calculate real statistics
     total_violations = len(violations)
     pending_violations = len([v for v in violations if v.get('status') == 'Pending'])
     total_appeals = len(appeals)
     pending_appeals = len([a for a in appeals if a.get('status') == 'Pending Review'])
-    total_designs = len(designs)
-    approved_designs = len([d for d in designs if d.get('status') == 'Approved'])
 
     # Calculate compliance rate (mock calculation)
     compliance_rate = 94.2 if total_violations == 0 else max(70, 100 - (total_violations * 2))
@@ -1301,9 +1421,7 @@ def dashboard():
         'violations_today': pending_violations,
         'events_this_week': 8,  # This would come from events collection
         'total_violations': total_violations,
-        'total_appeals': total_appeals,
-        'total_designs': total_designs,
-        'approved_designs': approved_designs
+        'total_appeals': total_appeals
     }
 
     print(f"[OK] Dashboard ready for user: {user.get('username', 'unknown')}")
@@ -1312,7 +1430,6 @@ def dashboard():
         user=user,
         violations=violations[:5],  # Show only recent 5
         appeals=appeals[:5],  # Show only recent 5
-        designs=designs,  # Pass all designs for details view
         stats=stats
     )
 

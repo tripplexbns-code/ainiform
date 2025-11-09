@@ -100,6 +100,71 @@
             background: rgba(255, 255, 255, 0.3);
         }
         
+        /* Dropdown menu styles */
+        .dropdown-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropdown-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .dropdown-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 5px;
+            background: white;
+            min-width: 200px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            overflow: hidden;
+            z-index: 1000;
+        }
+        
+        .dropdown-content.show {
+            display: block;
+        }
+        
+        .dropdown-item {
+            display: block;
+            padding: 12px 16px;
+            color: #1c1e21;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid #f0f2f5;
+            font-size: 14px;
+        }
+        
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+        
+        .dropdown-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .dropdown-item-icon {
+            margin-right: 8px;
+        }
+        
         .main-layout {
             display: flex;
             min-height: calc(100vh - 80px);
@@ -839,6 +904,42 @@
             overflow-x: auto;
             max-height: 500px;
             overflow-y: auto;
+        }
+        
+        /* Violations table container - similar to appeals */
+        .violations-table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e4e6ea;
+            margin-top: 20px;
+        }
+        
+        .violations-table-wrapper {
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        /* Custom scrollbar styling for violations table */
+        .violations-table-wrapper::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        .violations-table-wrapper::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        .violations-table-wrapper::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        
+        .violations-table-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
         }
         
         /* Responsive design */
@@ -1811,10 +1912,33 @@
             <div class="user-info">
                 <div class="user-avatar">👩‍🏫</div>
                 <div>
-                    <div style="font-weight: 600;">{{ user.name or user.username or 'User' }}</div>
+                    {% set full_name = user.name or user.username or 'User' %}
+                    {% set name_parts = full_name.split() %}
+                    {% if name_parts|length > 1 and name_parts[0].endswith('.') %}
+                        {# If name starts with a title (Mr., Mrs., Ms., etc.), keep title and last name #}
+                        <div style="font-weight: 600;">{{ name_parts[0] }} {{ name_parts[-1] }}</div>
+                    {% else %}
+                        {# Otherwise, just show the name as is #}
+                        <div style="font-weight: 600;">{{ full_name }}</div>
+                    {% endif %}
                     <div style="font-size: 12px; opacity: 0.8;">{{ (user.role or 'Guidance Counselor').title() }}</div>
                 </div>
-                <a href="logout" class="logout-btn">Logout</a>
+                <div class="dropdown-container">
+                    <button class="dropdown-btn" onclick="toggleDropdown()">
+                        ⋮
+                    </button>
+                    <div class="dropdown-content" id="userDropdown">
+                        <a href="#" class="dropdown-item" onclick="showHelpModal(); return false;">
+                            <span class="dropdown-item-icon">❓</span> Help
+                        </a>
+                        <a href="#" class="dropdown-item" onclick="showLanguageModal(); return false;">
+                            <span class="dropdown-item-icon">🌐</span> Language
+                        </a>
+                        <a href="/logout" class="dropdown-item">
+                            <span class="dropdown-item-icon">🚪</span> Logout
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1838,12 +1962,6 @@
                     <a href="#" class="nav-link" onclick="showTab('appeals')">
                         <span class="nav-icon">📝</span>
                         Appeals
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="showTab('designs')">
-                        <span class="nav-icon">👔</span>
-                        Uniform Designs
                     </a>
                 </li>
                 <li class="nav-item">
@@ -1871,11 +1989,6 @@
                         <div class="stat-label">Pending Appeals</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon">👔</div>
-                        <div class="stat-number">{{ designs|length }}</div>
-                        <div class="stat-label">Uniform Designs</div>
-                    </div>
-                    <div class="stat-card">
                         <div class="stat-icon">✅</div>
                         <div class="stat-number">{{ appeals|selectattr('status', 'equalto', 'Approved')|list|length }}</div>
                         <div class="stat-label">Approved Appeals</div>
@@ -1900,41 +2013,43 @@
                             <button class="btn btn-primary" onclick="searchViolations()">🔍 Search</button>
                         </div>
                         
-                        <div class="table-container">
-                            <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Student</th>
-                                    <th>Student ID</th>
-                                    <th>Violation</th>
-                                    <th>Status</th>
-                                    <th>Offense</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="violationsTableBody">
-                                {% for violation in violations %}
-                                <tr class="violation-row" data-student="{{ violation.student_name or 'Unknown' }}" data-violation-id="{{ violation.id or 'unknown' }}">
-                                    <td class="student-name-cell">
-                                        {{ violation.student_name or 'Unknown Student' }}
-                                    </td>
-                                    <td class="student-id-cell">
-                                        {{ violation.student_id or 'No ID' }}
-                                    </td>
-                                    <td>{{ violation.violation_type or 'Unknown Type' }}</td>
-                                    <td><span class="status-badge status-{{ (violation.status or 'Pending').lower() }}">{{ violation.status or 'Pending' }}</span></td>
-                                    <td class="count-cell">
-                                        <span class="violation-count-badge">
-                                            <!-- Offense will be populated by JavaScript -->
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-danger" onclick="deleteViolation('{{ violation.id or 'unknown' }}')">Delete</button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                        <div class="violations-table-container">
+                            <div class="violations-table-wrapper">
+                                <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Student ID</th>
+                                        <th>Violation</th>
+                                        <th>Status</th>
+                                        <th>Offense</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="violationsTableBody">
+                                    {% for violation in violations %}
+                                    <tr class="violation-row" data-student="{{ violation.student_name or 'Unknown' }}" data-violation-id="{{ violation.id or 'unknown' }}">
+                                        <td class="student-name-cell">
+                                            {{ violation.student_name or 'Unknown Student' }}
+                                        </td>
+                                        <td class="student-id-cell">
+                                            {{ violation.student_id or 'No ID' }}
+                                        </td>
+                                        <td>{{ violation.violation_type or 'Unknown Type' }}</td>
+                                        <td><span class="status-badge status-{{ (violation.status or 'Pending').lower() }}">{{ violation.status or 'Pending' }}</span></td>
+                                        <td class="count-cell">
+                                            <span class="violation-count-badge">
+                                                <!-- Offense will be populated by JavaScript -->
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-danger" onclick="deleteViolation('{{ violation.id or 'unknown' }}')">Delete</button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            </div>
                         </div>
                     </div>
                     
@@ -1944,7 +2059,6 @@
                             <h3 class="section-title">Appeals Management</h3>
                             <div class="action-buttons">
                                 <button class="btn btn-primary" onclick="openModal('appealModal')">➕ Add Appeal</button>
-                                <button class="btn btn-danger" onclick="clearAllAppeals()">🗑️ Clear All</button>
                             </div>
                         </div>
                         
@@ -1989,56 +2103,6 @@
                             </tbody>
                         </table>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Uniform Designs Tab -->
-                    <div id="designs" class="tab-content">
-                        <div class="section-header">
-                            <h3 class="section-title">Uniform Designs Management</h3>
-                            <div class="action-buttons">
-                                <button class="btn btn-primary" onclick="openModal('designModal')">➕ Add Design</button>
-                                <button class="btn btn-danger" onclick="clearAllDesigns()">🗑️ Clear All</button>
-                            </div>
-                        </div>
-                        
-                        <div class="search-bar">
-                            <input type="text" class="search-input" id="designSearch" placeholder="Search designs...">
-                            <button class="btn btn-primary" onclick="searchDesigns()">🔍 Search</button>
-                        </div>
-                        
-                        <div class="table-container designs-table-container">
-                            <table class="data-table designs-table">
-                            <thead>
-                                <tr>
-                                    <th>Design Name</th>
-                                    <th>Type</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for design in designs[:5] %}
-                                <tr>
-                                    <td><a href="#" class="design-name-link" onclick="viewDesignDetails('{{ design.id or 'unknown' }}')">{{ design.name or 'Unknown Design' }}</a></td>
-                                    <td>{{ design.type or 'Unknown Type' }}</td>
-                                    <td><span class="status-badge status-{{ (design.status or 'Pending').lower() }}">{{ design.status or 'Pending' }}</span></td>
-                                    <td>
-                                        <button class="btn btn-success" onclick="approveDesign('{{ design.id or 'unknown' }}')">Approve</button>
-                                        <button class="btn btn-danger" onclick="deleteDesign('{{ design.id or 'unknown' }}')">Delete</button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                                {% if not designs or designs|length == 0 %}
-                                <tr>
-                                    <td colspan="4" style="text-align: center; padding: 20px; color: #666;">
-                                        <div style="margin-bottom: 10px;">📋 No uniform designs found</div>
-                                        <button class="btn btn-primary" onclick="openModal('designModal')">➕ Add First Design</button>
-                                    </td>
-                                </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
                         </div>
                     </div>
                     
@@ -2147,84 +2211,6 @@
         </div>
     </div>
 
-    <!-- Design Modal -->
-    <div id="designModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Add New Design</h3>
-                <button class="close-btn" onclick="closeModal('designModal')">&times;</button>
-            </div>
-            <form id="designForm">
-                <div class="form-group">
-                    <label class="form-label">Design Name</label>
-                    <input type="text" class="form-input" name="name" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Type</label>
-                    <select class="form-select" name="type" required>
-                        <option value="">Select Type</option>
-                        <option value="school uniform">School Uniform</option>
-                        <option value="house shirt">House Shirt</option>
-                        <option value="casual shirt">Casual Shirt</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Upload Picture</label>
-                    <input type="file" class="form-input" name="image" accept="image/*">
-                    <small class="form-text">Upload a picture of the uniform design (JPG, PNG, GIF)</small>
-                </div>
-                <div class="action-buttons">
-                    <button type="submit" class="btn btn-primary">Save Design</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('designModal')">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Design Details Modal -->
-    <div id="designDetailsModal" class="modal">
-        <div class="modal-content modal-large">
-            <div class="modal-header">
-                <h3 class="modal-title">Design Details</h3>
-                <button class="close-btn" onclick="closeModal('designDetailsModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="design-details-container">
-                    <div class="design-info-section">
-                        <div class="detail-row">
-                            <label class="detail-label">Design Name:</label>
-                            <span class="detail-value" id="detailDesignName">-</span>
-                        </div>
-                        <div class="detail-row">
-                            <label class="detail-label">Type:</label>
-                            <span class="detail-value" id="detailDesignType">-</span>
-                        </div>
-                        <div class="detail-row">
-                            <label class="detail-label">Status:</label>
-                            <span class="detail-value" id="detailDesignStatus">-</span>
-                        </div>
-                        <div class="detail-row">
-                            <label class="detail-label">Created Date:</label>
-                            <span class="detail-value" id="detailDesignDate">-</span>
-                        </div>
-                    </div>
-                    <div class="design-image-section">
-                        <label class="detail-label">Design Image:</label>
-                        <div class="image-container" id="designImageContainer">
-                            <img id="designImage" src="" alt="Design Image" style="max-width: 100%; max-height: 400px; display: none;">
-                            <div id="noImageMessage" style="text-align: center; padding: 20px; color: #666; display: none;">
-                                No image uploaded for this design
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeModal('designDetailsModal')">Close</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Edit Violation Modal -->
     <div id="editViolationModal" class="modal">
         <div class="modal-content">
@@ -2319,12 +2305,10 @@
         // Pass server-side data to JavaScript
         window.violationsData = {{ violations | tojson }};
         window.appealsData = {{ appeals | tojson }};
-        window.designsData = {{ designs | tojson }};
         
         console.log('Server data loaded:', {
             violations: window.violationsData,
-            appeals: window.appealsData,
-            designs: window.designsData
+            appeals: window.appealsData
         });
     </script>
     
@@ -2353,103 +2337,6 @@
                 targetTab.classList.add('active');
                 console.log('Added active class to:', tabName);
                 
-                // Special handling for designs tab
-                if (tabName === 'designs') {
-                    console.log('Designs tab activated');
-                    console.log('Designs data:', window.designsData);
-                    console.log('Number of designs:', window.designsData ? window.designsData.length : 'No data');
-                    
-                    // Use setTimeout to ensure DOM is fully updated
-                    setTimeout(() => {
-                        // Force designs tab to be visible
-                        targetTab.style.display = 'block';
-                        targetTab.style.visibility = 'visible';
-                        targetTab.style.opacity = '1';
-                        
-                        // Check if table is visible
-                        const table = document.querySelector('#designs .designs-table');
-                        if (table) {
-                            console.log('Table found:', table);
-                            console.log('Table display style:', window.getComputedStyle(table).display);
-                            console.log('Table visibility:', window.getComputedStyle(table).visibility);
-                            
-                            // Force table to be visible with all properties
-                            table.style.display = 'table';
-                            table.style.visibility = 'visible';
-                            table.style.opacity = '1';
-                            table.style.width = '100%';
-                            table.style.minWidth = '700px';
-                            table.style.tableLayout = 'fixed';
-                            console.log('Forced table to be visible');
-                            
-                            // Force thead visibility
-                            const thead = table.querySelector('thead');
-                            if (thead) {
-                                thead.style.display = 'table-header-group';
-                                thead.style.visibility = 'visible';
-                                console.log('Forced thead to be visible');
-                            }
-                        } else {
-                            console.error('Table not found in designs tab');
-                        }
-                        
-                        // Check table body
-                        const tbody = document.querySelector('#designs tbody');
-                        if (tbody) {
-                            console.log('Table body found:', tbody);
-                            console.log('Table body display style:', window.getComputedStyle(tbody).display);
-                            
-                            // Force tbody to be visible
-                            tbody.style.display = 'table-row-group';
-                            tbody.style.visibility = 'visible';
-                            console.log('Forced table body to be visible');
-                        }
-                        
-                        // Check table rows
-                        const rows = document.querySelectorAll('#designs tbody tr');
-                        console.log('Number of table rows:', rows.length);
-                        rows.forEach((row, index) => {
-                            console.log(`Row ${index}:`, row.textContent.trim());
-                            console.log(`Row ${index} display:`, window.getComputedStyle(row).display);
-                            
-                            // Force row to be visible
-                            row.style.display = 'table-row';
-                            row.style.visibility = 'visible';
-                            console.log(`Forced row ${index} to be visible`);
-                        });
-                        
-                        // Force table container to be visible
-                        const tableContainer = document.querySelector('#designs .designs-table-container');
-                        if (tableContainer) {
-                            console.log('Table container found:', tableContainer);
-                            tableContainer.style.display = 'block';
-                            tableContainer.style.visibility = 'visible';
-                            tableContainer.style.opacity = '1';
-                            console.log('Forced table container to be visible');
-                        }
-                        
-                        // Clear any search filter and show all rows
-                        const searchInput = document.getElementById('designSearch');
-                        if (searchInput) {
-                            searchInput.value = '';
-                            console.log('Cleared search input');
-                        }
-                        
-                        // Ensure all rows are visible
-                        rows.forEach(row => {
-                            row.style.display = 'table-row';
-                            row.style.visibility = 'visible';
-                        });
-                        console.log('Reset all rows to be visible');
-                        
-                        // Final check - log all computed styles
-                        console.log('Final table styles:', {
-                            display: window.getComputedStyle(table).display,
-                            visibility: window.getComputedStyle(table).visibility,
-                            opacity: window.getComputedStyle(table).opacity
-                        });
-                    }, 100);
-                }
             } else {
                 console.error('Tab not found:', tabName);
             }
@@ -2504,6 +2391,169 @@
                     modal.style.display = 'none';
                 }
             });
+            
+            // Close dropdown when clicking outside
+            if (!event.target.matches('.dropdown-btn') && !event.target.closest('.dropdown-container')) {
+                const dropdown = document.getElementById('userDropdown');
+                if (dropdown) {
+                    dropdown.classList.remove('show');
+                }
+            }
+        }
+        
+        // Dropdown menu functions
+        function toggleDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('show');
+            }
+        }
+        
+        // Help modal function
+        function showHelpModal() {
+            // Close dropdown first
+            const dropdown = document.getElementById('userDropdown');
+            if (dropdown) {
+                dropdown.classList.remove('show');
+            }
+            
+            // Remove existing help modal if any
+            const existingModal = document.getElementById('helpModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            const helpModalHtml = `
+                <div id="helpModal" class="modal" style="display: block;">
+                    <div class="modal-content" style="max-width: 700px;">
+                        <div class="modal-header">
+                            <h3 class="modal-title">Help & Navigation Guide</h3>
+                            <button class="close-btn" onclick="closeModal('helpModal')">&times;</button>
+                        </div>
+                        <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+                            <div style="padding: 20px;">
+                                <h4 style="color: #1877f2; margin-bottom: 15px;">📋 Web Functionalities Guide</h4>
+                                
+                                <div style="margin-bottom: 25px;">
+                                    <h5 style="color: #1c1e21; margin-bottom: 10px;">⚠️ Violations Management</h5>
+                                    <ul style="line-height: 1.8; color: #65676b;">
+                                        <li><strong>Add Violation:</strong> Click the "➕ Add Violation" button to record a new uniform violation</li>
+                                        <li><strong>View Violations:</strong> Click on a student name or the "View" button to see all violations for that student</li>
+                                        <li><strong>Search:</strong> Use the search bar to find specific violations by student name or ID</li>
+                                        <li><strong>Delete:</strong> Click the "Delete" button in the violations modal to remove a violation</li>
+                                        <li><strong>Grouping:</strong> Violations are automatically grouped by student name</li>
+                                    </ul>
+                                </div>
+                                
+                                <div style="margin-bottom: 25px;">
+                                    <h5 style="color: #1c1e21; margin-bottom: 10px;">📝 Appeals Management</h5>
+                                    <ul style="line-height: 1.8; color: #65676b;">
+                                        <li><strong>Add Appeal:</strong> Click the "➕ Add Appeal" button to create a new appeal</li>
+                                        <li><strong>View Appeals:</strong> Click on a student name or the "View" button to see all appeals for that student</li>
+                                        <li><strong>Approve Appeals:</strong> Click "View Details" on an appeal, then click "✓ Approve Appeal"</li>
+                                        <li><strong>Reason Type:</strong> Select "Excused" or "Unexcused" when approving an appeal</li>
+                                        <li><strong>Status:</strong> Appeals show as "Pending Review" until approved</li>
+                                    </ul>
+                                </div>
+                                
+                                <div style="margin-bottom: 25px;">
+                                    <h5 style="color: #1c1e21; margin-bottom: 10px;">📊 Dashboard Features</h5>
+                                    <ul style="line-height: 1.8; color: #65676b;">
+                                        <li><strong>Statistics Cards:</strong> View total violations, pending appeals, and approved appeals at the top</li>
+                                        <li><strong>Activity Log:</strong> Switch to the "Activity Log" tab to see all system activities</li>
+                                        <li><strong>Navigation:</strong> Use the sidebar to switch between Violations, Appeals, and Activity Log</li>
+                                    </ul>
+                                </div>
+                                
+                                <div style="margin-bottom: 25px;">
+                                    <h5 style="color: #1c1e21; margin-bottom: 10px;">🔍 Tips & Shortcuts</h5>
+                                    <ul style="line-height: 1.8; color: #65676b;">
+                                        <li>Use the search functionality to quickly find students</li>
+                                        <li>Click on student names to view their complete violation/appeal history</li>
+                                        <li>All data is automatically saved and synced</li>
+                                        <li>Scroll through tables when there are many entries</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" onclick="closeModal('helpModal')">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', helpModalHtml);
+        }
+        
+        // Language modal function
+        function showLanguageModal() {
+            // Close dropdown first
+            const dropdown = document.getElementById('userDropdown');
+            if (dropdown) {
+                dropdown.classList.remove('show');
+            }
+            
+            // Remove existing language modal if any
+            const existingModal = document.getElementById('languageModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Get current language from localStorage or default to English
+            const currentLanguage = localStorage.getItem('selectedLanguage') || 'en';
+            
+            const languageModalHtml = `
+                <div id="languageModal" class="modal" style="display: block;">
+                    <div class="modal-content" style="max-width: 500px;">
+                        <div class="modal-header">
+                            <h3 class="modal-title">Select Language</h3>
+                            <button class="close-btn" onclick="closeModal('languageModal')">&times;</button>
+                        </div>
+                        <div class="modal-body" style="padding: 20px;">
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #1c1e21;">Choose your preferred language:</label>
+                                <select id="languageSelect" style="width: 100%; padding: 10px; border: 2px solid #e4e6ea; border-radius: 6px; font-size: 14px; background: white; cursor: pointer;">
+                                    <option value="en" ${currentLanguage === 'en' ? 'selected' : ''}>🇺🇸 English</option>
+                                    <option value="es" ${currentLanguage === 'es' ? 'selected' : ''}>🇪🇸 Español (Spanish)</option>
+                                    <option value="tl" ${currentLanguage === 'tl' ? 'selected' : ''}>🇵🇭 Tagalog (Filipino)</option>
+                                    <option value="zh" ${currentLanguage === 'zh' ? 'selected' : ''}>🇨🇳 中文 (Chinese)</option>
+                                    <option value="ja" ${currentLanguage === 'ja' ? 'selected' : ''}>🇯🇵 日本語 (Japanese)</option>
+                                </select>
+                            </div>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-top: 15px;">
+                                <p style="margin: 0; color: #65676b; font-size: 13px;">
+                                    <strong>Note:</strong> Language selection will be saved and applied to your next session.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-primary" onclick="saveLanguage()">Save Language</button>
+                            <button class="btn btn-secondary" onclick="closeModal('languageModal')">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', languageModalHtml);
+        }
+        
+        // Save language selection
+        function saveLanguage() {
+            const languageSelect = document.getElementById('languageSelect');
+            if (languageSelect) {
+                const selectedLanguage = languageSelect.value;
+                localStorage.setItem('selectedLanguage', selectedLanguage);
+                
+                // Show success message
+                showAlert('Language preference saved successfully!', 'success');
+                
+                // Close modal
+                closeModal('languageModal');
+                
+                // Note: Full language implementation would require translation files
+                // This is a basic framework for language selection
+            }
         }
 
         // Form submissions
@@ -2630,39 +2680,6 @@
             });
         });
 
-        document.getElementById('designForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            
-            fetch('/api/designs', {
-                method: 'POST',
-                credentials: 'same-origin',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    showAlert('Design added successfully!', 'success');
-                    
-                    // Log activity
-                    const formData = new FormData(this);
-                    const data = Object.fromEntries(formData);
-                    logActivity('add', 'design', 'Design Added', `New uniform design created: ${data.name}`, `Type: ${data.type}, Status: Under Review`);
-                    
-                    closeModal('designModal');
-                    
-                    // Automatically reload the page to show the new design
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1000); // Wait 1 second to show the success message
-                } else {
-                    showAlert('Error adding design: ' + (result.error || result.message || 'Unknown error'), 'error');
-                }
-            })
-            .catch(error => {
-                showAlert('Error adding design: ' + error.message, 'error');
-            });
-        });
 
         // Edit Violation Form Handler
         document.getElementById('editViolationForm').addEventListener('submit', function(e) {
@@ -2812,18 +2829,21 @@
                         groupedRows[studentName] = [];
                     }
                     groupedRows[studentName].push(row);
+                } else {
+                    // If no clickable-student-name found, try to get from data attribute or text content
+                    const studentName = row.dataset.student || row.querySelector('td:first-child')?.textContent.trim();
+                    if (studentName) {
+                        if (!groupedRows[studentName]) {
+                            groupedRows[studentName] = [];
+                        }
+                        groupedRows[studentName].push(row);
+                    }
                 }
             });
 
             // console.log('Grouped appeals by student:', Object.keys(groupedRows)); // Disabled to prevent console messages
 
-            // Only group if we have multiple rows for the same student
-            const needsGrouping = Object.values(groupedRows).some(appeals => appeals.length > 1);
-            if (!needsGrouping) {
-                // console.log('No duplicate students found, keeping original structure'); // Disabled to prevent console messages
-                return;
-            }
-
+            // Always group by student name to show one row per student
             // Clear table body completely
             tableBody.innerHTML = '';
 
@@ -2895,6 +2915,15 @@
                         groupedRows[studentName] = [];
                     }
                     groupedRows[studentName].push(row);
+                } else {
+                    // If no clickable-student-name found, try to get from data attribute or text content
+                    const studentName = row.dataset.student || row.querySelector('td:first-child')?.textContent.trim();
+                    if (studentName) {
+                        if (!groupedRows[studentName]) {
+                            groupedRows[studentName] = [];
+                        }
+                        groupedRows[studentName].push(row);
+                    }
                 }
             });
 
@@ -2933,169 +2962,6 @@
             });
         }
 
-        function searchDesigns() {
-            const searchTerm = document.getElementById('designSearch').value.toLowerCase();
-            const rows = document.querySelectorAll('#designs tbody tr');
-            
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(searchTerm) ? '' : 'none';
-            });
-        }
-
-        function debugDesignsTable() {
-            console.log('=== DEBUGGING DESIGNS TABLE ===');
-            
-            // Check if designs tab is active
-            const designsTab = document.getElementById('designs');
-            console.log('Designs tab element:', designsTab);
-            console.log('Designs tab has active class:', designsTab?.classList.contains('active'));
-            console.log('Designs tab display style:', designsTab ? window.getComputedStyle(designsTab).display : 'N/A');
-            console.log('Designs tab visibility:', designsTab ? window.getComputedStyle(designsTab).visibility : 'N/A');
-            console.log('Designs tab opacity:', designsTab ? window.getComputedStyle(designsTab).opacity : 'N/A');
-            
-            // Check table container
-            const tableContainer = document.querySelector('#designs .designs-table-container');
-            console.log('Table container element:', tableContainer);
-            if (tableContainer) {
-                console.log('Table container display:', window.getComputedStyle(tableContainer).display);
-                console.log('Table container visibility:', window.getComputedStyle(tableContainer).visibility);
-                console.log('Table container opacity:', window.getComputedStyle(tableContainer).opacity);
-            }
-            
-            // Check table
-            const table = document.querySelector('#designs .designs-table');
-            console.log('Table element:', table);
-            if (table) {
-                console.log('Table display style:', window.getComputedStyle(table).display);
-                console.log('Table visibility:', window.getComputedStyle(table).visibility);
-                console.log('Table opacity:', window.getComputedStyle(table).opacity);
-                console.log('Table width:', window.getComputedStyle(table).width);
-                console.log('Table height:', window.getComputedStyle(table).height);
-            }
-            
-            // Check table body
-            const tbody = document.querySelector('#designs tbody');
-            console.log('Table body element:', tbody);
-            if (tbody) {
-                console.log('Table body display style:', window.getComputedStyle(tbody).display);
-                console.log('Table body visibility:', window.getComputedStyle(tbody).visibility);
-            }
-            
-            // Check rows
-            const rows = document.querySelectorAll('#designs tbody tr');
-            console.log('Number of rows:', rows.length);
-            rows.forEach((row, index) => {
-                console.log(`Row ${index}:`, {
-                    element: row,
-                    display: window.getComputedStyle(row).display,
-                    visibility: window.getComputedStyle(row).visibility,
-                    opacity: window.getComputedStyle(row).opacity,
-                    text: row.textContent.trim()
-                });
-            });
-            
-            // Check designs data
-            console.log('Designs data:', window.designsData);
-            console.log('Number of designs in data:', window.designsData ? window.designsData.length : 'No data');
-            
-            // Check for any CSS rules that might be hiding the table
-            if (table) {
-                const allStyles = window.getComputedStyle(table);
-                console.log('All table computed styles:', {
-                    display: allStyles.display,
-                    visibility: allStyles.visibility,
-                    opacity: allStyles.opacity,
-                    position: allStyles.position,
-                    zIndex: allStyles.zIndex,
-                    overflow: allStyles.overflow,
-                    width: allStyles.width,
-                    height: allStyles.height,
-                    maxWidth: allStyles.maxWidth,
-                    maxHeight: allStyles.maxHeight
-                });
-            }
-            
-            // Show alert with summary
-            const summary = `Designs Tab Active: ${designsTab?.classList.contains('active')}\nTable Found: ${!!table}\nRows Found: ${rows.length}\nData Available: ${window.designsData ? window.designsData.length : 0} designs\nTable Display: ${table ? window.getComputedStyle(table).display : 'N/A'}\nTable Visibility: ${table ? window.getComputedStyle(table).visibility : 'N/A'}`;
-            alert(summary);
-        }
-
-        function forceRefreshDesignsTable() {
-            console.log('=== FORCE REFRESHING DESIGNS TABLE ===');
-            
-            // First, ensure the designs tab is active
-            const designsTab = document.getElementById('designs');
-            if (designsTab) {
-                designsTab.classList.add('active');
-                designsTab.style.display = 'block';
-                designsTab.style.visibility = 'visible';
-                designsTab.style.opacity = '1';
-            }
-            
-            // Force table container visibility
-            const tableContainer = document.querySelector('#designs .designs-table-container');
-            if (tableContainer) {
-                tableContainer.style.display = 'block';
-                tableContainer.style.visibility = 'visible';
-                tableContainer.style.opacity = '1';
-            }
-            
-            // Force table visibility
-            const table = document.querySelector('#designs .designs-table');
-            if (table) {
-                table.style.display = 'table';
-                table.style.visibility = 'visible';
-                table.style.opacity = '1';
-                table.style.width = '100%';
-                table.style.minWidth = '700px';
-                table.style.tableLayout = 'fixed';
-                
-                // Force thead visibility
-                const thead = table.querySelector('thead');
-                if (thead) {
-                    thead.style.display = 'table-header-group';
-                    thead.style.visibility = 'visible';
-                }
-                
-                // Force all th elements
-                const thElements = table.querySelectorAll('th');
-                thElements.forEach(th => {
-                    th.style.display = 'table-cell';
-                    th.style.visibility = 'visible';
-                });
-            }
-            
-            // Force tbody visibility
-            const tbody = document.querySelector('#designs tbody');
-            if (tbody) {
-                tbody.style.display = 'table-row-group';
-                tbody.style.visibility = 'visible';
-            }
-            
-            // Force all rows to be visible
-            const rows = document.querySelectorAll('#designs tbody tr');
-            rows.forEach(row => {
-                row.style.display = 'table-row';
-                row.style.visibility = 'visible';
-                row.style.opacity = '1';
-                
-                // Force all td elements in each row
-                const tdElements = row.querySelectorAll('td');
-                tdElements.forEach(td => {
-                    td.style.display = 'table-cell';
-                    td.style.visibility = 'visible';
-                });
-            });
-            
-            // Clear any search filters
-            const searchInput = document.getElementById('designSearch');
-            if (searchInput) {
-                searchInput.value = '';
-            }
-            
-            console.log('Force refresh completed');
-        }
 
         // Activity Log Functions
         function showActivityLog() {
@@ -3623,66 +3489,6 @@
             }
         }
 
-        function clearAllDesigns() {
-            if (confirm('⚠️ WARNING: This will delete ALL designs permanently!\n\nAre you absolutely sure you want to continue?')) {
-                if (confirm('This action cannot be undone. Type "DELETE ALL" to confirm:')) {
-                    // Get all designs first
-                    fetch('/api/designs', {
-                        credentials: 'same-origin'
-                    })
-                        .then(response => response.json())
-                        .then(result => {
-                            if (!result.success) {
-                                showAlert('Error fetching designs: ' + (result.error || 'Unknown error'), 'error');
-                                return;
-                            }
-                            
-                            const designs = result.data || result;
-                            if (!designs || !Array.isArray(designs) || designs.length === 0) {
-                                showAlert('No designs to delete.', 'info');
-                                return;
-                            }
-                            
-                            // Delete all designs one by one
-                            let deletePromises = designs.map(design => 
-                                fetch(`/api/designs/${design.id}`, {
-                                    method: 'DELETE'
-                                })
-                            );
-                            
-                            Promise.all(deletePromises)
-                                .then(responses => {
-                                    const results = responses.map(response => response.json());
-                                    return Promise.all(results);
-                                })
-                                .then(results => {
-                                    const successCount = results.filter(result => result.success).length;
-                                    if (successCount === designs.length) {
-                                        showAlert(`Successfully deleted ${successCount} designs!`, 'success');
-                                        
-                                        // Log activity
-                                        logActivity('delete', 'design', 'Bulk Design Deletion', `All ${successCount} designs have been deleted`, `Total deleted: ${successCount} designs`);
-                                        
-                                        location.reload();
-                                    } else {
-                                        showAlert(`Deleted ${successCount} out of ${designs.length} designs. Some may have failed.`, 'warning');
-                                        
-                                        // Log activity
-                                        logActivity('delete', 'design', 'Partial Design Deletion', `${successCount} out of ${designs.length} designs deleted`, `Successfully deleted: ${successCount}, Failed: ${designs.length - successCount}`);
-                                        
-                                        location.reload();
-                                    }
-                                })
-                                .catch(error => {
-                                    showAlert('Error clearing designs: ' + error.message, 'error');
-                                });
-                        })
-                        .catch(error => {
-                            showAlert('Error fetching designs: ' + error.message, 'error');
-                        });
-                }
-            }
-        }
 
         function clearAllData() {
             if (confirm('⚠️ CRITICAL WARNING: This will delete ALL data permanently!\n\nThis includes:\n- All Violations\n- All Appeals\n- All Designs\n\nAre you absolutely sure you want to continue?')) {
@@ -4088,102 +3894,6 @@
                 });
         }
 
-        function approveDesign(id) {
-            if (confirm('Are you sure you want to approve this design?')) {
-                fetch(`/api/designs/${id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ status: 'APPROVED' })
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        showAlert('Design approved successfully!', 'success');
-                        
-                        // Log activity
-                        logActivity('edit', 'design', 'Design Approved', `Design with ID ${id} has been approved`, `Status: Approved`);
-                        
-                        reapplyGrouping();
-                        refreshDataOnly(); // Use the new refresh function that maintains current tab
-                    } else {
-                        showAlert('Error approving design: ' + (result.error || result.message || 'Unknown error'), 'error');
-                    }
-                })
-                .catch(error => {
-                    showAlert('Error approving design: ' + error.message, 'error');
-                });
-            }
-        }
-
-
-        function deleteDesign(id) {
-            if (confirm('Are you sure you want to delete this design?')) {
-                fetch(`/api/designs/${id}`, {
-                    method: 'DELETE'
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        showAlert('Design deleted successfully!', 'success');
-                        
-                        // Log activity
-                        logActivity('delete', 'design', 'Design Deleted', `Uniform design with ID ${id} has been deleted`, `ID: ${id}`);
-                        
-                        refreshDataOnly();
-                    } else {
-                        showAlert('Error deleting design: ' + (result.error || result.message || 'Unknown error'), 'error');
-                    }
-                })
-                .catch(error => {
-                    showAlert('Error deleting design: ' + error.message, 'error');
-                });
-            }
-        }
-
-        function viewDesignDetails(id) {
-            // Get all designs from the current page data
-            const designs = {{ designs | tojson }};
-            console.log('All designs:', designs);
-            console.log('Looking for design with ID:', id);
-            
-            const design = designs.find(d => d.id === id || d._id === id);
-            console.log('Found design:', design);
-            
-            if (!design) {
-                showAlert('Design not found!', 'error');
-                return;
-            }
-            
-            // Populate the modal with design details
-            document.getElementById('detailDesignName').textContent = design.name || 'Unknown Design';
-            document.getElementById('detailDesignType').textContent = design.type || 'Unknown Type';
-            document.getElementById('detailDesignStatus').textContent = design.status || 'Unknown Status';
-            document.getElementById('detailDesignDate').textContent = design.created_date || design.submitted_date || 'Unknown Date';
-            
-            // Handle image display
-            const imageElement = document.getElementById('designImage');
-            const noImageMessage = document.getElementById('noImageMessage');
-            
-            console.log('Design image_url:', design.image_url);
-            console.log('Image URL type:', typeof design.image_url);
-            console.log('Image URL length:', design.image_url ? design.image_url.length : 'null');
-            
-            if (design.image_url && design.image_url.trim() !== '') {
-                console.log('Setting image source to:', design.image_url);
-                imageElement.src = design.image_url;
-                imageElement.style.display = 'block';
-                noImageMessage.style.display = 'none';
-            } else {
-                console.log('No image URL found, showing no image message');
-                imageElement.style.display = 'none';
-                noImageMessage.style.display = 'block';
-            }
-            
-            // Show the modal
-            openModal('designDetailsModal');
-        }
 
         function exportData(type) {
             showAlert('Export functionality coming soon!', 'success');
@@ -4431,8 +4141,9 @@
             
             console.log(`Updated appeals table with ${appeals.length} appeals`);
             
-            // Add event listeners to the new view buttons
+            // Group appeals by student name to show one row per student
             setTimeout(() => {
+                groupAppealRows();
             }, 100);
         }
 
@@ -4988,12 +4699,6 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Reason Description -->
-                                <div style="background: #f8f9fa; padding: 12px 15px; border-radius: 6px; border-left: 3px solid #1877f2; margin-bottom: 15px;">
-                                    <div style="font-size: 12px; color: #1877f2; font-weight: 600; margin-bottom: 8px;">REASON DESCRIPTION</div>
-                                    <p style="margin: 0; line-height: 1.5; color: #333; font-size: 14px; white-space: pre-wrap;">${reason}</p>
-                                </div>
-                                
                                 <!-- Action Buttons -->
                                 <div style="margin-top: 15px; text-align: center; display: flex; gap: 10px; justify-content: center;">
                                     ${!isApproved ? `
@@ -5089,55 +4794,87 @@
         function viewStudentAppeals(studentName) {
             console.log('View button clicked for:', studentName);
             
-            // Show a simple modal with student information
-            showSimpleAppealsModal(studentName);
+            // Fetch all appeals for this student
+            fetch('/api/appeals', {
+                credentials: 'same-origin'
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success && result.data) {
+                        const studentAppeals = result.data.filter(a => a.student_name === studentName);
+                        showStudentAppealsModal(studentName, studentAppeals);
+                    } else {
+                        showAlert('Error fetching appeals for ' + studentName, 'error');
+                    }
+                })
+                .catch(error => {
+                    showAlert('Error fetching appeals: ' + error.message, 'error');
+                });
         }
 
-        function showSimpleAppealsModal(studentName) {
-            // Remove any existing modal
-            const existingModal = document.getElementById('simpleAppealsModal');
+        function showStudentAppealsModal(studentName, appeals) {
+            // Remove any existing student appeals modal
+            const existingModal = document.getElementById('studentAppealsModal');
             if (existingModal) {
                 existingModal.remove();
             }
             
+            // Create modal HTML similar to violations modal
             const modalHtml = `
-                <div id="simpleAppealsModal" class="modal" style="display: block;">
-                    <div class="modal-content" style="max-width: 600px;">
+                <div id="studentAppealsModal" class="modal" style="display: block;">
+                    <div class="modal-content" style="max-width: 800px;">
                         <div class="modal-header">
-                            <h3 class="modal-title">Appeals for ${studentName}</h3>
-                            <button class="close-btn" onclick="closeSimpleAppealsModal()">&times;</button>
+                            <h3 class="modal-title">All Appeals for ${studentName} (${appeals.length} total)</h3>
+                            <button class="close-btn" onclick="closeStudentAppealsModal()">&times;</button>
                         </div>
-                        <div class="modal-body">
-                            <div style="text-align: center; padding: 20px;">
-                                <h4 style="color: #1877f2; margin-bottom: 15px;">Student: ${studentName}</h4>
-                                <p style="margin-bottom: 20px;">This student has appeals in the system.</p>
-                                
-                                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                                    <h5 style="margin: 0 0 10px 0; color: #1c1e21;">Appeal Information</h5>
-                                    <p style="margin: 5px 0; color: #65676b;">• Student has submitted appeals</p>
-                                    <p style="margin: 5px 0; color: #65676b;">• Appeals are being processed</p>
-                                    <p style="margin: 5px 0; color: #65676b;">• Status updates available</p>
-                                </div>
-                                
-                                <div style="margin-top: 20px;">
-                                    <button class="btn btn-primary" onclick="refreshAppealsData()" style="margin-right: 10px;">
-                                        🔄 Refresh Data
-                                    </button>
-                                    <button class="btn btn-secondary" onclick="closeSimpleAppealsModal()">
-                                        Close
-                                    </button>
-                                </div>
+                        <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+                            <div class="appeals-list">
+                                ${appeals.map((appeal, index) => {
+                                    const appealId = appeal.id || appeal._id || `appeal-${index}`;
+                                    const appealDate = appeal.status === 'Approved' && appeal.approved_date 
+                                        ? new Date(appeal.approved_date).toLocaleDateString() 
+                                        : appeal.date || appeal.created_date || appeal.submitted_date || appeal.appeal_date || 'No Date';
+                                    const appealStatus = appeal.status || 'Pending Review';
+                                    // Show "Pending Review" as reason type if appeal is not approved, otherwise show actual reason type
+                                    const reasonType = appealStatus === 'Approved' 
+                                        ? (appeal.reason_type || 'Unexcused') 
+                                        : 'Pending Review';
+                                    const studentId = appeal.student_id || 'N/A';
+                                    
+                                    return `
+                                        <div class="appeal-item" style="margin-bottom: 15px; padding: 15px; border: 1px solid #e4e6ea; border-radius: 8px; background: #f8f9fa;">
+                                            <div class="appeal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                                <span style="font-weight: 600; color: #1877f2;">Appeal #${index + 1}</span>
+                                                <span class="status-badge status-${appealStatus.toLowerCase().replace(/\s+/g, '-')}" style="padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">${appealStatus}</span>
+                                            </div>
+                                            <div class="appeal-details" style="margin-bottom: 10px;">
+                                                <p style="margin: 5px 0;"><strong>Student ID:</strong> ${studentId}</p>
+                                                <p style="margin: 5px 0;"><strong>Date:</strong> ${appealDate}</p>
+                                                <p style="margin: 5px 0;"><strong>Reason Type:</strong> ${reasonType}</p>
+                                            </div>
+                                            <div class="appeal-actions" style="margin-top: 10px;">
+                                                <button class="btn btn-primary btn-sm" onclick="viewAppealDetails('${appealId}')" style="margin-right: 8px;">
+                                                    View Details
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
                             </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" onclick="closeStudentAppealsModal()">Close</button>
                         </div>
                     </div>
                 </div>
             `;
             
+            // Add modal to page
             document.body.insertAdjacentHTML('beforeend', modalHtml);
         }
 
-        function closeSimpleAppealsModal() {
-            const modal = document.getElementById('simpleAppealsModal');
+        function closeStudentAppealsModal() {
+            const modal = document.getElementById('studentAppealsModal');
             if (modal) {
                 modal.remove();
             }
@@ -5340,12 +5077,18 @@
                                     <div class="violation-item">
                                         <div class="violation-header">
                                             <span class="violation-number">#${index + 1}</span>
-                                            <div class="violation-type-container">
-                                                <span class="violation-type">${violation.violation_type || 'Incomplete Uniform'}</span>
-                                                <span class="violation-date" style="text-align: center; display: block;">
-                                                    ${dateDisplay || 'No date'}
-                                                    ${timeDisplay ? `<div style="font-size: 11px; color: rgba(255, 255, 255, 0.6); margin-top: 2px; text-align: center; opacity: 0.7;">${timeDisplay}</div>` : ''}
-                                                </span>
+                                            <div class="violation-type-container" style="flex: 1; display: flex; flex-direction: column; gap: 5px;">
+                                                <span class="violation-type" style="font-weight: 600; font-size: 15px;">${violation.violation_type || 'Incomplete Uniform'}</span>
+                                                <div style="display: flex; flex-direction: column; gap: 3px;">
+                                                    <div style="font-size: 13px; color: #666;">
+                                                        <strong>Date:</strong> ${dateDisplay || 'No date'}
+                                                    </div>
+                                                    ${timeDisplay ? `
+                                                    <div style="font-size: 13px; color: #666;">
+                                                        <strong>Time:</strong> ${timeDisplay}
+                                                    </div>
+                                                    ` : ''}
+                                                </div>
                                             </div>
                                             <span class="violation-status status-${(violation.status || 'Warning').toLowerCase().replace(/[^a-z0-9]/g, '-')}">${violation.status || 'Warning'}</span>
                                         </div>
@@ -5354,7 +5097,6 @@
                                             <p style="margin-top: 5px;">${missingItemsContent}</p>
                                         </div>
                                         <div class="violation-actions">
-                                            <button class="btn btn-sm btn-secondary" onclick="editViolationFromModal('${violation.id}', '${(violation.student_name || '').replace(/'/g, "\\'")}', '${(violation.violation_type || 'Incomplete Uniform').replace(/'/g, "\\'")}', '${(violation.description || '').replace(/'/g, "\\'")}', '${(violation.status || 'Warning').replace(/'/g, "\\'")}')">Edit</button>
                                             <button class="btn btn-sm btn-danger" onclick="deleteViolation('${violation.id}')">Delete</button>
                                         </div>
                                     </div>
@@ -5497,7 +5239,6 @@
             // Set up search input listeners
             document.getElementById('violationSearch').addEventListener('input', searchViolations);
             document.getElementById('appealSearch').addEventListener('input', searchAppeals);
-            document.getElementById('designSearch').addEventListener('input', searchDesigns);
             document.getElementById('activitySearch').addEventListener('input', searchActivities);
             
             // Set today's date for violation form
