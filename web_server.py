@@ -722,7 +722,7 @@ def login():
         if user_role.lower() == "admin":
             return redirect(url_for("admin_dashboard"))
         else:
-            return redirect(url_for("loading"))
+            return redirect(url_for("dashboard"))
 
     # GET
     return render_template("login.html")
@@ -1328,6 +1328,64 @@ def api_designs():
             return {"error": str(e)}, 500
 
 
+@app.route("/api/designs/<design_id>", methods=["GET"])
+def api_get_design(design_id):
+    """API endpoint to get a single design by ID"""
+    if not session.get("user"):
+        return {"error": "Unauthorized"}, 401
+    
+    print(f"[DEBUG] api_get_design called with design_id: {design_id}")
+    
+    try:
+        # First, try to search by 'id' field
+        print(f"[DEBUG] Searching by 'id' field for: {design_id}")
+        design = search_in_firebase("uniform_designs", "id", design_id)
+        if design:
+            print(f"[DEBUG] Found design by 'id' field")
+            return {"success": True, "data": design[0]}, 200
+        
+        # If not found by 'id' field, try to get document directly by document ID
+        if firebase_manager.db:
+            try:
+                print(f"[DEBUG] Trying to get document directly by document ID: {design_id}")
+                doc_ref = firebase_manager.db.collection("uniform_designs").document(design_id)
+                doc = doc_ref.get()
+                if doc.exists:
+                    doc_data = doc.to_dict()
+                    doc_data['id'] = doc.id
+                    print(f"[DEBUG] Found design by document ID")
+                    return {"success": True, "data": doc_data}, 200
+                else:
+                    print(f"[DEBUG] Document with ID {design_id} does not exist")
+            except Exception as e:
+                print(f"[DEBUG] Error getting document by ID: {e}")
+        
+        # If still not found, try searching all designs and match by ID
+        print(f"[DEBUG] Searching all designs for matching ID")
+        all_designs = get_from_firebase("uniform_designs") or []
+        print(f"[DEBUG] Retrieved {len(all_designs)} designs from Firebase")
+        for i, d in enumerate(all_designs):
+            # Check if the design_id matches the document ID or the 'id' field
+            if isinstance(d, dict):
+                d_id = d.get('id')
+                print(f"[DEBUG] Design {i}: id field = {d_id}, looking for {design_id}")
+                if d_id == design_id:
+                    print(f"[DEBUG] Found design by matching 'id' field in all designs")
+                    return {"success": True, "data": d}, 200
+            # Also check if design_id might be in the document reference
+            if hasattr(d, 'id') and str(d.id) == design_id:
+                print(f"[DEBUG] Found design by matching document attribute")
+                return {"success": True, "data": d}, 200
+        
+        print(f"[DEBUG] Design not found after all search methods")
+        return {"error": "Design not found"}, 404
+    except Exception as e:
+        print(f"[ERROR] Error in api_get_design: {e}")
+        import traceback
+        traceback.print_exc()
+        return {"error": str(e)}, 500
+
+
 @app.route("/api/designs/<design_id>", methods=["PUT"])
 def api_update_design(design_id):
     """API endpoint to update a design"""
@@ -1456,6 +1514,17 @@ def admin_dashboard():
     try:
         designs = get_cached_data("uniform_designs", 20)
         print(f"[STATS] Loaded data - Designs: {len(designs)}")
+        
+        # Ensure all designs have an 'id' field
+        # If designs come from Firebase, they should have 'id' set by get_documents
+        # But let's make sure and also handle cases where it might be missing
+        for i, design in enumerate(designs):
+            if isinstance(design, dict):
+                if 'id' not in design or not design.get('id'):
+                    # Try to get document ID from Firebase if available
+                    # For now, use a fallback ID
+                    design['id'] = f"design_{i}"
+                    print(f"[WARN] Design at index {i} missing ID, using fallback: {design['id']}")
     except Exception as e:
         print(f"[WARN] Error loading admin dashboard data: {e}")
         # Fallback to empty data
@@ -1471,11 +1540,14 @@ def admin_dashboard():
         'total_designs': total_designs,
         'approved_designs': approved_designs,
         'pending_designs': pending_designs,
-        'rejected_designs': rejected_designs,
-        'approval_rate': round((approved_designs / total_designs * 100) if total_designs > 0 else 0, 1)
+        'rejected_designs': rejected_designs
     }
 
     print(f"[OK] Admin dashboard ready for user: {user.get('username', 'unknown')}")
+    # Debug: print first design's ID if available
+    if designs and len(designs) > 0:
+        print(f"[DEBUG] First design ID: {designs[0].get('id', 'NO ID')}")
+    
     return render_template(
         "admin_dashboard.html",
         user=user,

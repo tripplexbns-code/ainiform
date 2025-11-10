@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Uniform System - Login</title>
-    <meta name="description" content="AI Uniform System - Modern guidance counselor portal for uniform compliance management">
-    <meta name="keywords" content="uniform, guidance, school, management, AI">
-    <meta name="author" content="AI Uniform System">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+    <title>AI-niform - Login</title>
+    <meta name="description" content="AI-niform - Modern AI-powered uniform compliance management system">
+    <meta name="keywords" content="uniform, guidance, school, management, AI, compliance">
+    <meta name="author" content="AI-niform">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -18,187 +18,348 @@
             box-sizing: border-box;
         }
         
+        :root {
+            --primary-blue: #1a237e;
+            --bright-blue: #3f51b5;
+            --light-blue: #5c6bc0;
+            --accent-blue: #2196f3;
+            --dark-bg: #0a0e27;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-dark: #1a1a1a;
+            --text-light: #6b7280;
+            --border-color: rgba(63, 81, 181, 0.2);
+        }
+        
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0a0e27 0%, #1a237e 50%, #3f51b5 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Animated background particles */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(63, 81, 181, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(33, 150, 243, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(92, 107, 192, 0.1) 0%, transparent 50%);
+            animation: float 20s ease-in-out infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+        
+        .login-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 480px;
         }
         
         .login-container {
-            background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            padding: 50px 40px;
+            border-radius: 24px;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
             width: 100%;
-            max-width: 400px;
+            position: relative;
+            overflow: hidden;
         }
         
-        .logo {
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--light-blue), var(--bright-blue));
+            animation: shimmer 3s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        .logo-section {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
+            animation: fadeInDown 0.8s ease-out;
         }
         
-        .logo h1 {
-            color: #1877f2;
-            font-size: 28px;
-            margin-bottom: 10px;
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
-        .logo p {
-            color: #65676b;
+        .logo-container {
+            display: inline-block;
+            position: relative;
+            margin-bottom: 20px;
+            animation: pulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .logo-img {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            filter: drop-shadow(0 10px 30px rgba(63, 81, 181, 0.4));
+            animation: pulse 3s ease-in-out infinite;
+        }
+        
+        .brand-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 42px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--bright-blue) 0%, var(--accent-blue) 50%, var(--light-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 15px 0 8px;
+            letter-spacing: -1px;
+            text-shadow: 0 0 30px rgba(63, 81, 181, 0.3);
+            position: relative;
+        }
+        
+        .brand-name::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+            border-radius: 2px;
+        }
+        
+        .tagline {
+            color: var(--text-light);
             font-size: 16px;
+            font-weight: 500;
+            margin-top: 10px;
+            letter-spacing: 0.5px;
+        }
+        
+        .form-section {
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+            position: relative;
         }
         
         .form-group label {
             display: block;
-            margin-bottom: 8px;
-            color: #1c1e21;
+            margin-bottom: 10px;
+            color: var(--text-dark);
             font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .input-wrapper {
+            position: relative;
         }
         
         .form-group input {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e4e6ea;
-            border-radius: 6px;
+            padding: 16px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
             font-size: 16px;
-            transition: border-color 0.3s;
+            background: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--text-dark);
         }
         
         .form-group input:focus {
             outline: none;
-            border-color: #1877f2;
+            border-color: var(--accent-blue);
+            background: white;
+            box-shadow: 
+                0 0 0 4px rgba(33, 150, 243, 0.1),
+                0 8px 24px rgba(63, 81, 181, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .form-group input::placeholder {
+            color: var(--text-light);
+            opacity: 0.6;
+        }
+        
+        .input-icon {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 18px;
+            pointer-events: none;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+            font-size: 18px;
+            transition: color 0.3s ease;
+            z-index: 10;
+        }
+        
+        .password-toggle:hover {
+            color: var(--accent-blue);
+        }
+        
+        .password-toggle:focus {
+            outline: none;
+            color: var(--accent-blue);
+        }
+        
+        .toggle-icon {
+            display: inline-block;
+            transition: transform 0.2s ease;
+        }
+        
+        .password-toggle.active .toggle-icon {
+            transform: scale(1.1);
         }
         
         .login-btn {
             width: 100%;
-            padding: 12px;
-            background: #1877f2;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--bright-blue) 0%, var(--accent-blue) 100%);
             color: white;
             border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 600;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(63, 81, 181, 0.3);
+        }
+        
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .login-btn:hover::before {
+            left: 100%;
         }
         
         .login-btn:hover {
-            background: #166fe5;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(63, 81, 181, 0.4);
         }
         
-        .demo-credentials {
-            background: #e3f2fd;
-            padding: 15px;
-            border-radius: 6px;
-            margin-top: 20px;
-            text-align: center;
-        }
-        
-        .demo-credentials h3 {
-            color: #1565c0;
-            margin-bottom: 10px;
-        }
-        
-        .demo-credentials p {
-            color: #1976d2;
-            margin: 5px 0;
+        .login-btn:active {
+            transform: translateY(0);
         }
         
         .error {
             color: #e41e3f;
             text-align: center;
             margin-top: 15px;
-            padding: 10px;
-            background: #ffeaea;
-            border-radius: 6px;
+            padding: 14px;
+            background: rgba(228, 30, 63, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(228, 30, 63, 0.2);
+            font-size: 14px;
+            animation: shake 0.5s;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
         }
         
         .success {
             color: #42b883;
             text-align: center;
             margin-top: 15px;
-            padding: 10px;
-            background: #e8f5e8;
-            border-radius: 6px;
+            padding: 14px;
+            background: rgba(66, 184, 131, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(66, 184, 131, 0.2);
+            font-size: 14px;
         }
         
-        /* Mobile Responsive Design */
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-            
-            .login-container {
-                padding: 30px 20px;
-                margin: 10px;
-                width: 100%;
-                max-width: 400px;
-            }
-            
-            .logo h1 {
-                font-size: 24px;
-            }
-            
-            .logo p {
-                font-size: 14px;
-            }
-            
-            .form-group input {
-                font-size: 16px; /* Prevents zoom on iOS */
-            }
-            
-            .login-btn {
-                font-size: 16px;
-                padding: 14px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .login-container {
-                padding: 20px 15px;
-            }
-            
-            .logo h1 {
-                font-size: 20px;
-            }
-            
-            .demo-credentials {
-                padding: 12px;
-            }
-            
-            .demo-credentials h3 {
-                font-size: 14px;
-            }
-            
-            .demo-credentials p {
-                font-size: 12px;
-            }
-        }
-        
-        /* Loading Animation */
         .loading {
             display: none;
             text-align: center;
-            margin-top: 15px;
+            margin-top: 20px;
         }
         
         .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #1877f2;
+            border: 4px solid rgba(63, 81, 181, 0.1);
+            border-top: 4px solid var(--accent-blue);
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            width: 40px;
+            height: 40px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
+            margin: 0 auto 15px;
         }
         
         @keyframes spin {
@@ -206,85 +367,160 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* Button Hover Effects */
-        .login-btn:active {
-            transform: translateY(1px);
+        .loading p {
+            color: var(--text-light);
+            font-weight: 500;
         }
         
-        /* Focus States */
-        .form-group input:focus {
-            outline: none;
-            border-color: #1877f2;
-            box-shadow: 0 0 0 3px rgba(24, 119, 242, 0.1);
+        /* Mobile Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            .login-container {
+                padding: 40px 30px;
+            }
+            
+            .logo-img {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .brand-name {
+                font-size: 36px;
+            }
+            
+            .tagline {
+                font-size: 14px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+                border-radius: 20px;
+            }
+            
+            .logo-img {
+                width: 80px;
+                height: 80px;
+            }
+            
+            .brand-name {
+                font-size: 32px;
+            }
+            
+            .form-group input {
+                padding: 14px 16px;
+                font-size: 16px;
+            }
+            
+            .login-btn {
+                padding: 14px;
+                font-size: 16px;
+            }
         }
         
         /* Accessibility */
         @media (prefers-reduced-motion: reduce) {
-            .spinner {
-                animation: none;
+            * {
+                animation: none !important;
+                transition: none !important;
             }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="logo">
-            <h1>🎓 AI Uniform System</h1>
-            <p>Guidance Counselor Portal</p>
-        </div>
-        
-        <form method="POST">
-            <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" name="username" required>
+    <div class="login-wrapper">
+        <div class="login-container">
+            <div class="logo-section">
+                <div class="logo-container">
+                    <img src="{{ url_for('static', filename='logo.png') }}" 
+                         alt="AI-niform Logo" 
+                         class="logo-img">
+                </div>
+                <h1 class="brand-name">AI-niform</h1>
+                <p class="tagline">Intelligent Uniform Compliance System</p>
             </div>
             
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
+            <div class="form-section">
+                <form method="POST">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="username" name="username" placeholder="Enter your username" required autocomplete="username">
+                            <span class="input-icon">👤</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="password" name="password" placeholder="Enter your password" required autocomplete="current-password">
+                            <button type="button" class="password-toggle" id="password-toggle" aria-label="Toggle password visibility">
+                                <span class="toggle-icon">👁️</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="login-btn">
+                        <span>Access System</span>
+                    </button>
+                </form>
             </div>
             
-            <button type="submit" class="login-btn">🔐 LOG IN</button>
-        </form>
-        
-        <div class="demo-credentials">
-            <h3>🔑 Demo Credentials</h3>
-            <p><strong>Username:</strong> guidance1</p>
-            <p><strong>Password:</strong> guidance123</p>
-        </div>
-        
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        
-        <!-- Loading State -->
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>Signing you in...</p>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <!-- Loading State -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Authenticating...</p>
+            </div>
         </div>
     </div>
     
     <script>
-        // Enhanced form handling with loading states
+        // Enhanced form handling with modern UX
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.querySelector('form');
             const loginBtn = document.querySelector('.login-btn');
             const loading = document.getElementById('loading');
             const usernameInput = document.getElementById('username');
             const passwordInput = document.getElementById('password');
+            const passwordToggle = document.getElementById('password-toggle');
+            const toggleIcon = passwordToggle.querySelector('.toggle-icon');
             
-            // Auto-focus on username field
-            usernameInput.focus();
+            // Password toggle functionality
+            passwordToggle.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                // Update icon and button state
+                if (type === 'text') {
+                    toggleIcon.textContent = '🙈';
+                    passwordToggle.classList.add('active');
+                } else {
+                    toggleIcon.textContent = '👁️';
+                    passwordToggle.classList.remove('active');
+                }
+            });
             
-            // Reset loading state on page load (in case of previous error)
+            // Auto-focus on username field with smooth animation
+            setTimeout(() => {
+                usernameInput.focus();
+            }, 300);
+            
+            // Reset loading state on page load
             loading.style.display = 'none';
-            loginBtn.style.display = 'block';
             
-            // Form submission with loading state
+            // Form submission with enhanced loading state
             form.addEventListener('submit', function(e) {
                 const username = usernameInput.value.trim();
                 const password = passwordInput.value;
@@ -296,84 +532,43 @@
                     return;
                 }
                 
-                // Show loading state
-                loginBtn.style.display = 'none';
-                loading.style.display = 'block';
+                // Show loading state with smooth transition
+                loginBtn.style.opacity = '0';
+                loginBtn.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    loginBtn.style.display = 'none';
+                    loading.style.display = 'block';
+                }, 200);
                 
                 // Set a timeout to reset loading state if login takes too long
                 setTimeout(function() {
                     if (loading.style.display === 'block') {
                         loading.style.display = 'none';
                         loginBtn.style.display = 'block';
-                        showError('Login is taking longer than expected. Please try again.');
+                        loginBtn.style.opacity = '1';
+                        loginBtn.style.pointerEvents = 'auto';
+                        showError('Authentication is taking longer than expected. Please try again.');
                     }
-                }, 10000); // 10 second timeout
-                
-                // Allow form to submit naturally - don't prevent default
-                // The loading state will show until the page redirects
+                }, 10000);
             });
             
-            // Quick fill demo credentials
-            function quickFillDemo() {
-                usernameInput.value = 'guidance1';
-                passwordInput.value = 'guidance123';
-                showSuccess('Demo credentials filled!');
-            }
+            // Enhanced input validation with visual feedback
+            usernameInput.addEventListener('input', function() {
+                const isValid = this.value.trim().length > 0;
+                this.style.borderColor = isValid ? 'rgba(33, 150, 243, 0.5)' : 'rgba(63, 81, 181, 0.2)';
+            });
             
-            // Add quick fill button if not exists
-            if (!document.querySelector('.quick-fill-btn')) {
-                const quickFillBtn = document.createElement('button');
-                quickFillBtn.type = 'button';
-                quickFillBtn.className = 'quick-fill-btn';
-                quickFillBtn.textContent = '⚡ Quick Fill Demo';
-                quickFillBtn.style.cssText = `
-                    width: 100%;
-                    padding: 10px;
-                    margin-top: 10px;
-                    background: #f0f2f5;
-                    color: #1877f2;
-                    border: 2px solid #1877f2;
-                    border-radius: 6px;
-                    cursor: pointer;
-                    font-size: 14px;
-                    font-weight: 600;
-                `;
-                quickFillBtn.onclick = quickFillDemo;
-                form.appendChild(quickFillBtn);
-            }
+            passwordInput.addEventListener('input', function() {
+                const isValid = this.value.length > 0;
+                this.style.borderColor = isValid ? 'rgba(33, 150, 243, 0.5)' : 'rgba(63, 81, 181, 0.2)';
+            });
             
-            // Show/hide password functionality
-            function togglePassword() {
-                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                passwordInput.setAttribute('type', type);
-            }
-            
-            // Add show/hide password button
-            if (!document.querySelector('.toggle-password')) {
-                const toggleBtn = document.createElement('button');
-                toggleBtn.type = 'button';
-                toggleBtn.className = 'toggle-password';
-                toggleBtn.textContent = '👁️ Show Password';
-                toggleBtn.style.cssText = `
-                    position: absolute;
-                    right: 10px;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    background: none;
-                    border: none;
-                    cursor: pointer;
-                    font-size: 16px;
-                `;
-                
-                const passwordGroup = passwordInput.parentElement;
-                passwordGroup.style.position = 'relative';
-                passwordGroup.appendChild(toggleBtn);
-                
-                toggleBtn.onclick = function() {
-                    togglePassword();
-                    this.textContent = passwordInput.type === 'password' ? '👁️ Show Password' : '🙈 Hide Password';
-                };
-            }
+            // Add enter key support for quick login
+            form.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && usernameInput.value && passwordInput.value) {
+                    form.dispatchEvent(new Event('submit'));
+                }
+            });
             
             // Error and success message functions
             function showError(message) {
@@ -383,9 +578,13 @@
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'error';
                 errorDiv.textContent = message;
-                form.appendChild(errorDiv);
+                form.parentElement.appendChild(errorDiv);
                 
-                setTimeout(() => errorDiv.remove(), 5000);
+                setTimeout(() => {
+                    errorDiv.style.opacity = '0';
+                    errorDiv.style.transform = 'translateY(-10px)';
+                    setTimeout(() => errorDiv.remove(), 300);
+                }, 5000);
             }
             
             function showSuccess(message) {
@@ -395,25 +594,17 @@
                 const successDiv = document.createElement('div');
                 successDiv.className = 'success';
                 successDiv.textContent = message;
-                form.appendChild(successDiv);
+                form.parentElement.appendChild(successDiv);
                 
-                setTimeout(() => successDiv.remove(), 3000);
+                setTimeout(() => {
+                    successDiv.style.opacity = '0';
+                    setTimeout(() => successDiv.remove(), 300);
+                }, 3000);
             }
             
-            // Keyboard shortcuts
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && e.ctrlKey) {
-                    quickFillDemo();
-                }
-            });
-            
-            // Input validation feedback
-            usernameInput.addEventListener('input', function() {
-                this.style.borderColor = this.value.trim() ? '#42b883' : '#e4e6ea';
-            });
-            
-            passwordInput.addEventListener('input', function() {
-                this.style.borderColor = this.value ? '#42b883' : '#e4e6ea';
+            // Add smooth transitions to inputs
+            [usernameInput, passwordInput].forEach(input => {
+                input.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
             });
         });
     </script>

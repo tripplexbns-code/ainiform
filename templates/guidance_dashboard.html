@@ -23,31 +23,133 @@
         }
         
         .header {
-            background: #1877f2;
+            background: linear-gradient(135deg, #1877f2 0%, #1565c0 100%);
             color: white;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 18px 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             position: sticky;
             top: 0;
             z-index: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .header-content {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 20px;
+            position: relative;
+        }
+        
+        .dashboard-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%);
+            padding: 12px 20px;
+            border-radius: 16px;
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .dashboard-badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .dashboard-badge:hover::before {
+            left: 100%;
+        }
+        
+        .dashboard-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+        
+        .dashboard-badge-icon {
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.2) 100%);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .dashboard-badge-text {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 255, 255, 0.2);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            justify-content: center;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .header-ve-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            transition: box-shadow 0.2s;
+        }
+        
+        .header-logo-container:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .header-logo {
+            height: 48px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+        }
+        
+        .header-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
         }
         
         .header h1 {
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
-        
-        .header p {
-            opacity: 0.9;
-            font-size: 14px;
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.2;
+            letter-spacing: -0.3px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         }
         
         .loading-indicator {
@@ -71,18 +173,51 @@
         .user-info {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: background 0.2s, transform 0.2s;
+            position: absolute;
+            right: 0;
+        }
+        
+        .user-info:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
         }
         
         .user-avatar {
-            width: 40px;
-            height: 40px;
-            background: rgba(255, 255, 255, 0.2);
+            width: 42px;
+            height: 42px;
+            background: rgba(255, 255, 255, 0.25);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .user-details {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 1.3;
+        }
+        
+        .user-role {
+            font-size: 11px;
+            opacity: 0.85;
+            font-weight: 400;
         }
         
         .logout-btn {
@@ -168,133 +303,215 @@
         .main-layout {
             display: flex;
             min-height: calc(100vh - 80px);
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
         }
         
         .sidebar {
-            width: 280px;
-            background: #1877f2;
+            width: 300px;
+            background: linear-gradient(180deg, #1e3c72 0%, #2a5298 100%);
             color: white;
             position: sticky;
             top: 80px;
             height: calc(100vh - 80px);
             overflow-y: auto;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
         }
         
         .sidebar-header {
-            padding: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 30px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.05);
         }
         
         .sidebar-header h2 {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 5px;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
         
         .sidebar-header p {
-            opacity: 0.8;
-            font-size: 14px;
+            opacity: 0.85;
+            font-size: 13px;
+            font-weight: 400;
         }
         
         .nav-menu {
             list-style: none;
-            padding: 0;
+            padding: 12px 0;
             margin: 0;
         }
         
         .nav-item {
-            margin: 0;
+            margin: 4px 12px;
         }
         
         .nav-link {
             display: flex;
             align-items: center;
-            padding: 15px 20px;
-            color: white;
+            padding: 16px 20px;
+            color: rgba(255, 255, 255, 0.9);
             text-decoration: none;
-            transition: all 0.3s ease;
-            border-left: 3px solid transparent;
-            font-size: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 12px;
+            font-size: 15px;
             font-weight: 500;
             cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: rgba(255, 255, 255, 0.8);
+            transform: scaleY(0);
+            transition: transform 0.3s;
         }
         
         .nav-link:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-left-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.12);
+            color: white;
+            transform: translateX(4px);
         }
         
         .nav-link.active {
-            background: rgba(255, 255, 255, 0.15);
-            border-left-color: white;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .nav-link.active::before {
+            transform: scaleY(1);
         }
         
         .nav-icon {
-            font-size: 20px;
-            margin-right: 12px;
-            width: 24px;
+            font-size: 22px;
+            margin-right: 14px;
+            width: 28px;
             text-align: center;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
         }
         
         .main-content {
             flex: 1;
-            padding: 20px;
-            background: #f8f9fa;
+            padding: 30px;
+            background: transparent;
+            overflow-y: auto;
         }
         
         .container {
-            max-width: 1000px;
+            max-width: 1400px;
             margin: 0 auto;
         }
         
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
         }
         
         .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 28px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
             text-align: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transform: scaleX(0);
             transition: transform 0.3s;
         }
         
         .stat-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-8px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .stat-card:hover::before {
+            transform: scaleX(1);
         }
         
         .stat-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
+            font-size: 52px;
+            margin-bottom: 16px;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
         }
         
         .stat-number {
-            font-size: 32px;
-            font-weight: 700;
-            color: #1877f2;
-            margin-bottom: 5px;
+            font-size: 36px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
         }
         
         .stat-label {
-            color: #65676b;
+            color: #6c757d;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
         .content-section {
             background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
             overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.05);
         }
         
         .tab-content {
             display: none;
-            padding: 30px;
+            padding: 32px;
+            animation: fadeIn 0.4s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .tab-content.active {
@@ -316,32 +533,57 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f2f5;
         }
         
         .section-title {
-            font-size: 20px;
-            font-weight: 600;
+            font-size: 24px;
+            font-weight: 700;
             color: #1c1e21;
+            letter-spacing: -0.5px;
         }
         
         .action-buttons {
             display: flex;
-            gap: 10px;
+            gap: 12px;
+            flex-wrap: wrap;
         }
         
         .btn {
-            padding: 10px 20px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 6px;
+            border-radius: 12px;
             cursor: pointer;
             font-weight: 600;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
         }
         
         .btn-primary {
@@ -352,6 +594,7 @@
         .btn-primary:hover {
             background: #166fe5;
             transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(24, 119, 242, 0.4);
         }
         
         .btn-secondary {
@@ -361,6 +604,8 @@
         
         .btn-secondary:hover {
             background: #d1d3d9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
         
         .btn-success {
@@ -370,6 +615,8 @@
         
         .btn-success:hover {
             background: #369870;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(66, 184, 131, 0.4);
         }
         
         .btn-danger {
@@ -379,26 +626,39 @@
         
         .btn-danger:hover {
             background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        }
+        
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 12px;
         }
         
         .search-bar {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 12px;
+            margin-bottom: 24px;
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid #e4e6ea;
         }
         
         .search-input {
             flex: 1;
-            padding: 12px 16px;
-            border: 1px solid #e4e6ea;
-            border-radius: 6px;
+            padding: 14px 18px;
+            border: 2px solid #e4e6ea;
+            border-radius: 10px;
             font-size: 14px;
-            transition: border-color 0.3s;
+            transition: all 0.3s;
+            background: white;
         }
         
         .search-input:focus {
             outline: none;
-            border-color: #1877f2;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
         
         .data-table {
@@ -406,24 +666,27 @@
             min-width: 900px;
             border-collapse: collapse;
             background: white;
-            border-radius: 8px;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
             table-layout: fixed;
         }
         
         .data-table th {
-            background: #f8f9fa;
-            padding: 12px 10px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 16px 12px;
             text-align: left;
-            font-weight: 600;
+            font-weight: 700;
             color: #1c1e21;
-            border-bottom: 1px solid #e4e6ea;
+            border-bottom: 2px solid #e4e6ea;
             white-space: nowrap;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
         .data-table td {
-            padding: 12px 10px;
+            padding: 16px 12px;
             border-bottom: 1px solid #f0f2f5;
             word-wrap: break-word;
             vertical-align: middle;
@@ -640,33 +903,46 @@
             min-width: 70px;
         }
         
-        .data-table tr:hover {
-            background: #f8f9fa;
+        .data-table tr {
+            transition: all 0.2s ease;
+        }
+        
+        .data-table tbody tr:hover {
+            background: linear-gradient(90deg, #f8f9fa 0%, #f0f2f5 100%);
+            transform: scale(1.01);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
         }
         
         .table-container {
             width: 100%;
             overflow-x: auto;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+            background: white;
+            padding: 4px;
         }
         
         .table-container::-webkit-scrollbar {
-            height: 8px;
+            height: 10px;
         }
         
         .table-container::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
+            background: #f1f3f5;
+            border-radius: 8px;
         }
         
         .table-container::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.1);
         }
         
         .table-container::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
+            background: linear-gradient(135deg, #5568d3 0%, #653a8f 100%);
         }
         
         /* Appeals modal styling */
@@ -993,11 +1269,20 @@
         }
         
         .status-badge {
-            padding: 4px 12px;
+            padding: 6px 14px;
             border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 11px;
+            font-weight: 700;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .status-badge:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
         
         .reason-badge {
@@ -1401,10 +1686,23 @@
         .appeal-count-badge {
             background-color: #6c757d;
             color: white;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-size: 0.75em;
-            margin-left: 8px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 6px;
+        }
+        
+        .student-info-container {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .student-name-display {
+            font-weight: 600;
+            color: #1c1e21;
         }
         
         .appeals-list {
@@ -1575,66 +1873,107 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.3s ease;
         }
         
         .modal-content {
-            background: white;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
             margin: 5% auto;
-            padding: 30px;
-            border-radius: 10px;
+            padding: 0;
+            border-radius: 20px;
             width: 90%;
             max-width: 600px;
             max-height: 80vh;
             overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #e4e6ea;
+            padding: 24px 28px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px 20px 0 0;
+            border-bottom: none;
+            margin-bottom: 0;
         }
         
         .modal-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #1c1e21;
+            font-size: 22px;
+            font-weight: 700;
+            color: white;
+            margin: 0;
         }
         
         .close-btn {
-            background: none;
+            background: rgba(255, 255, 255, 0.2);
             border: none;
-            font-size: 24px;
+            font-size: 28px;
             cursor: pointer;
-            color: #65676b;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            padding: 0;
+        }
+        
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+        
+        .modal-body {
+            padding: 28px;
         }
         
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
         
         .form-label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
+            margin-bottom: 10px;
+            font-weight: 600;
             color: #1c1e21;
-        }
-        
-        .form-input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #e4e6ea;
-            border-radius: 6px;
             font-size: 14px;
-            transition: border-color 0.3s;
+            letter-spacing: 0.2px;
         }
         
-        .form-input:focus {
+        .form-input, .form-select {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e4e6ea;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .form-input:focus, .form-select:focus {
             outline: none;
-            border-color: #1877f2;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
         
         .form-textarea {
@@ -1749,8 +2088,74 @@
                 padding: 20px;
             }
             
+            .header {
+                padding: 14px 16px;
+            }
+            
+            .header-content {
+                gap: 12px;
+                justify-content: space-between;
+            }
+            
+            .dashboard-badge {
+                padding: 10px 14px;
+                gap: 10px;
+            }
+            
+            .dashboard-badge-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 18px;
+            }
+            
+            .dashboard-badge-text {
+                font-size: 12px;
+            }
+            
+            .header-brand {
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+            
+            .user-info {
+                position: absolute;
+                right: 0;
+            }
+            
             .header h1 {
-                font-size: 20px;
+                font-size: 18px;
+            }
+            
+            .header-logo-container {
+                padding: 6px;
+            }
+            
+            .header-logo {
+                height: 38px;
+            }
+            
+            .header-brand {
+                gap: 12px;
+            }
+            
+            .user-info {
+                padding: 6px 12px;
+                gap: 10px;
+            }
+            
+            .user-avatar {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+            
+            .user-name {
+                font-size: 12px;
+            }
+            
+            .user-role {
+                font-size: 10px;
             }
             
             .tab-content {
@@ -1761,76 +2166,93 @@
         /* Activity Log Styles */
         .activity-log-section {
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            padding: 24px;
             margin-top: 20px;
         }
         
         .activity-log-container {
             max-height: 600px;
             overflow-y: auto;
-            border: 1px solid #e4e6ea;
-            border-radius: 8px;
-            background: #fafbfc;
+            border-radius: 12px;
+            background: #f8f9fa;
+            padding: 8px;
+        }
+        
+        .activity-log-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .activity-log-container::-webkit-scrollbar-track {
+            background: #f1f3f5;
+            border-radius: 4px;
+        }
+        
+        .activity-log-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
         }
         
         .activity-log-content {
-            padding: 20px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
         
         .activity-item {
             display: flex;
             align-items: center;
-            padding: 15px 20px;
-            border-bottom: 1px solid #e4e6ea;
+            padding: 18px 20px;
             background: white;
-            margin-bottom: 8px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            transition: all 0.2s ease;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 4px solid transparent;
         }
         
         .activity-item:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transform: translateX(4px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            border-left-color: #667eea;
         }
         
         .activity-item:last-child {
-            border-bottom: none;
             margin-bottom: 0;
         }
         
         .activity-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
-            margin-right: 15px;
+            font-size: 20px;
+            margin-right: 16px;
             flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         
         .activity-icon.add {
-            background: #d4edda;
-            color: #155724;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
         }
         
         .activity-icon.edit {
-            background: #fff3cd;
-            color: #856404;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
         }
         
         .activity-icon.delete {
-            background: #f8d7da;
-            color: #721c24;
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
         }
         
         .activity-icon.appeal {
-            background: #cce5ff;
-            color: #004085;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
         }
         
         .activity-details {
@@ -1839,24 +2261,27 @@
         }
         
         .activity-title {
-            font-weight: 600;
+            font-weight: 700;
             color: #1c1e21;
-            margin-bottom: 4px;
-            font-size: 14px;
+            margin-bottom: 6px;
+            font-size: 15px;
+            letter-spacing: -0.2px;
         }
         
         .activity-description {
             color: #6c757d;
             font-size: 13px;
-            margin-bottom: 4px;
+            margin-bottom: 8px;
+            line-height: 1.5;
         }
         
         .activity-meta {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 16px;
             font-size: 12px;
             color: #8a8d93;
+            font-weight: 500;
         }
         
         .activity-time {
@@ -1905,23 +2330,30 @@
     <!-- Header -->
     <div class="header">
         <div class="header-content">
-            <div>
-                <h1>🎓 AI Uniform System</h1>
-                <p>Guidance Counselor Dashboard</p>
+            <div class="dashboard-badge">
+                <div class="dashboard-badge-text">Guidance Counselor Dashboard</div>
+            </div>
+            <div class="header-brand">
+                <div class="header-logo-container">
+                    <img src="/static/logo.png" alt="Logo" class="header-logo">
+                </div>
+                <div class="header-text">
+                    <h1>AI Uniform System</h1>
+                </div>
             </div>
             <div class="user-info">
                 <div class="user-avatar">👩‍🏫</div>
-                <div>
+                <div class="user-details">
                     {% set full_name = user.name or user.username or 'User' %}
                     {% set name_parts = full_name.split() %}
                     {% if name_parts|length > 1 and name_parts[0].endswith('.') %}
                         {# If name starts with a title (Mr., Mrs., Ms., etc.), keep title and last name #}
-                        <div style="font-weight: 600;">{{ name_parts[0] }} {{ name_parts[-1] }}</div>
+                        <div class="user-name">{{ name_parts[0] }} {{ name_parts[-1] }}</div>
                     {% else %}
                         {# Otherwise, just show the name as is #}
-                        <div style="font-weight: 600;">{{ full_name }}</div>
+                        <div class="user-name">{{ full_name }}</div>
                     {% endif %}
-                    <div style="font-size: 12px; opacity: 0.8;">{{ (user.role or 'Guidance Counselor').title() }}</div>
+                    <div class="user-role">{{ (user.role or 'Guidance Counselor').title() }}</div>
                 </div>
                 <div class="dropdown-container">
                     <button class="dropdown-btn" onclick="toggleDropdown()">
@@ -1929,13 +2361,13 @@
                     </button>
                     <div class="dropdown-content" id="userDropdown">
                         <a href="#" class="dropdown-item" onclick="showHelpModal(); return false;">
-                            <span class="dropdown-item-icon">❓</span> Help
+                            <span class="dropdown-item-icon">❓</span> <span data-translate="help">Help</span>
                         </a>
                         <a href="#" class="dropdown-item" onclick="showLanguageModal(); return false;">
-                            <span class="dropdown-item-icon">🌐</span> Language
+                            <span class="dropdown-item-icon">🌐</span> <span data-translate="language">Language</span>
                         </a>
                         <a href="/logout" class="dropdown-item">
-                            <span class="dropdown-item-icon">🚪</span> Logout
+                            <span class="dropdown-item-icon">🚪</span> <span data-translate="logout">Logout</span>
                         </a>
                     </div>
                 </div>
@@ -1948,26 +2380,26 @@
         <!-- Sidebar Navigation -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <h2>Navigation</h2>
-                <p>Manage your tasks</p>
+                <h2 data-translate="navigation">Navigation</h2>
+                <p data-translate="manage-tasks">Manage your tasks</p>
             </div>
             <ul class="nav-menu">
                 <li class="nav-item">
                     <a href="#" class="nav-link active" onclick="showTab('violations')">
                         <span class="nav-icon">⚠️</span>
-                        Violations
+                        <span data-translate="violations">Violations</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="#" class="nav-link" onclick="showTab('appeals')">
                         <span class="nav-icon">📝</span>
-                        Appeals
+                        <span data-translate="appeals">Appeals</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="#" class="nav-link" onclick="showTab('activity')">
                         <span class="nav-icon">📋</span>
-                        Activity Log
+                        <span data-translate="activity-log">Activity Log</span>
                     </a>
                 </li>
             </ul>
@@ -1981,17 +2413,17 @@
                     <div class="stat-card">
                         <div class="stat-icon">⚠️</div>
                         <div class="stat-number">{{ violations|length }}</div>
-                        <div class="stat-label">Total Violations</div>
+                        <div class="stat-label" data-translate="total-violations">Total Violations</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon">📝</div>
                         <div class="stat-number">{{ appeals|length }}</div>
-                        <div class="stat-label">Pending Appeals</div>
+                        <div class="stat-label" data-translate="pending-appeals">Pending Appeals</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon">✅</div>
                         <div class="stat-number">{{ appeals|selectattr('status', 'equalto', 'Approved')|list|length }}</div>
-                        <div class="stat-label">Approved Appeals</div>
+                        <div class="stat-label" data-translate="approved-appeals">Approved Appeals</div>
                     </div>
                 </div>
 
@@ -2000,17 +2432,17 @@
                     <!-- Violations Tab -->
                     <div id="violations" class="tab-content active">
         <div class="section-header">
-            <h3 class="section-title">Uniform Violations Management</h3>
+            <h3 class="section-title" data-translate="violations-management">Uniform Violations Management</h3>
             <div class="action-buttons">
-                <button class="btn btn-primary" onclick="openModal('violationModal')">➕ Add Violation</button>
-                <button class="btn btn-danger" onclick="clearAllViolations()">🗑️ Clear All</button>
+                <button class="btn btn-primary" onclick="openModal('violationModal')" data-translate="add-violation">➕ Add Violation</button>
+                <button class="btn btn-danger" onclick="clearAllViolations()" data-translate="clear-all">🗑️ Clear All</button>
             </div>
         </div>
         
                         
                         <div class="search-bar">
-                            <input type="text" class="search-input" id="violationSearch" placeholder="Search violations...">
-                            <button class="btn btn-primary" onclick="searchViolations()">🔍 Search</button>
+                            <input type="text" class="search-input" id="violationSearch" data-translate-placeholder="search-violations" placeholder="Search violations...">
+                            <button class="btn btn-primary" onclick="searchViolations()" data-translate="search">🔍 Search</button>
                         </div>
                         
                         <div class="violations-table-container">
@@ -2018,12 +2450,12 @@
                                 <table class="data-table">
                                 <thead>
                                     <tr>
-                                        <th>Student</th>
-                                        <th>Student ID</th>
-                                        <th>Violation</th>
-                                        <th>Status</th>
-                                        <th>Offense</th>
-                                        <th>Actions</th>
+                                        <th data-translate="student">Student</th>
+                                        <th data-translate="student-id">Student ID</th>
+                                        <th data-translate="violation">Violation</th>
+                                        <th data-translate="status">Status</th>
+                                        <th data-translate="offense">Offense</th>
+                                        <th data-translate="actions">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="violationsTableBody">
@@ -2043,7 +2475,7 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <button class="btn btn-danger" onclick="deleteViolation('{{ violation.id or 'unknown' }}')">Delete</button>
+                                            <button class="btn btn-danger" onclick="deleteViolation('{{ violation.id or 'unknown' }}')" data-translate="delete">Delete</button>
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -2111,7 +2543,6 @@
                         <div class="section-header">
                             <h3 class="section-title">📋 Activity Log</h3>
                             <div class="action-buttons">
-                                <button class="btn btn-primary" onclick="refreshActivityLog()">🔄 Refresh</button>
                                 <button class="btn btn-danger" onclick="clearActivityLog()">🗑️ Clear Log</button>
                             </div>
                         </div>
@@ -2140,6 +2571,7 @@
                 <h3 class="modal-title">Add New Violation</h3>
                 <button class="close-btn" onclick="closeModal('violationModal')">&times;</button>
             </div>
+            <div class="modal-body">
             <form id="violationForm">
                 <div class="form-group">
                     <label class="form-label">Student Name</label>
@@ -2172,6 +2604,7 @@
                     <button type="button" class="btn btn-secondary" onclick="closeModal('violationModal')">Cancel</button>
                 </div>
             </form>
+            </div>
         </div>
     </div>
 
@@ -2182,6 +2615,7 @@
                 <h3 class="modal-title">Add New Appeal</h3>
                 <button class="close-btn" onclick="closeModal('appealModal')">&times;</button>
             </div>
+            <div class="modal-body">
             <form id="appealForm">
                 <div class="form-group">
                     <label class="form-label">Student Name</label>
@@ -2208,6 +2642,7 @@
                     <button type="button" class="btn btn-secondary" onclick="closeModal('appealModal')">Cancel</button>
                 </div>
             </form>
+            </div>
         </div>
     </div>
 
@@ -2218,6 +2653,7 @@
                 <h3 class="modal-title">Edit Violation</h3>
                 <button class="close-btn" onclick="closeModal('editViolationModal')">&times;</button>
             </div>
+            <div class="modal-body">
             <form id="editViolationForm">
                 <input type="hidden" id="editViolationId" name="id">
                 <div class="form-group">
@@ -2256,6 +2692,7 @@
                     <button type="button" class="btn btn-secondary" onclick="closeModal('editViolationModal')">Cancel</button>
                 </div>
             </form>
+            </div>
         </div>
     </div>
 
@@ -2266,6 +2703,7 @@
                 <h3 class="modal-title">Edit Appeal</h3>
                 <button class="close-btn" onclick="closeModal('editAppealModal')">&times;</button>
             </div>
+            <div class="modal-body">
             <form id="editAppealForm">
                 <input type="hidden" id="editAppealId" name="id">
                 <div class="form-group">
@@ -2284,7 +2722,6 @@
                     <label class="form-label">Reason Details</label>
                     <textarea class="form-input form-textarea" id="editAppealReason" name="reason" required placeholder="Describe the reason for the appeal..."></textarea>
                 </div>
-                </div>
                 <div class="form-group">
                     <label class="form-label">Resolution Notes</label>
                     <textarea class="form-input form-textarea" id="editAppealResolutionNotes" name="resolution_notes" placeholder="Add resolution notes or follow-up actions..."></textarea>
@@ -2294,6 +2731,7 @@
                     <button type="button" class="btn btn-secondary" onclick="closeModal('editAppealModal')">Cancel</button>
                 </div>
             </form>
+            </div>
         </div>
     </div>
 
@@ -2486,6 +2924,229 @@
             document.body.insertAdjacentHTML('beforeend', helpModalHtml);
         }
         
+        // Translation dictionary
+        const translations = {
+            en: {
+                'dashboard-title': 'Guidance Counselor Dashboard',
+                'navigation': 'Navigation',
+                'manage-tasks': 'Manage your tasks',
+                'violations': 'Violations',
+                'appeals': 'Appeals',
+                'activity-log': 'Activity Log',
+                'total-violations': 'Total Violations',
+                'pending-appeals': 'Pending Appeals',
+                'approved-appeals': 'Approved Appeals',
+                'violations-management': 'Uniform Violations Management',
+                'add-violation': 'Add Violation',
+                'clear-all': 'Clear All',
+                'search-violations': 'Search violations...',
+                'search': 'Search',
+                'student': 'Student',
+                'student-id': 'Student ID',
+                'violation': 'Violation',
+                'status': 'Status',
+                'offense': 'Offense',
+                'actions': 'Actions',
+                'delete': 'Delete',
+                'edit': 'Edit',
+                'view': 'View',
+                'help': 'Help',
+                'language': 'Language',
+                'logout': 'Logout',
+                'select-language': 'Select Language',
+                'choose-language': 'Choose your preferred language:',
+                'save-language': 'Save Language',
+                'cancel': 'Cancel',
+                'language-saved': 'Language changed successfully!',
+                'appeals-management': 'Appeals Management',
+                'add-appeal': 'Add Appeal',
+                'appeal-date': 'Appeal Date',
+                'reason': 'Reason',
+                'submitted-by': 'Submitted By'
+            },
+            es: {
+                'dashboard-title': 'Panel de Consejero de Orientación',
+                'navigation': 'Navegación',
+                'manage-tasks': 'Administra tus tareas',
+                'violations': 'Violaciones',
+                'appeals': 'Apelaciones',
+                'activity-log': 'Registro de Actividad',
+                'total-violations': 'Violaciones Totales',
+                'pending-appeals': 'Apelaciones Pendientes',
+                'approved-appeals': 'Apelaciones Aprobadas',
+                'violations-management': 'Gestión de Violaciones de Uniforme',
+                'add-violation': 'Agregar Violación',
+                'clear-all': 'Limpiar Todo',
+                'search-violations': 'Buscar violaciones...',
+                'search': 'Buscar',
+                'student': 'Estudiante',
+                'student-id': 'ID del Estudiante',
+                'violation': 'Violación',
+                'status': 'Estado',
+                'offense': 'Infracción',
+                'actions': 'Acciones',
+                'delete': 'Eliminar',
+                'edit': 'Editar',
+                'view': 'Ver',
+                'help': 'Ayuda',
+                'language': 'Idioma',
+                'logout': 'Cerrar Sesión',
+                'select-language': 'Seleccionar Idioma',
+                'choose-language': 'Elige tu idioma preferido:',
+                'save-language': 'Guardar Idioma',
+                'cancel': 'Cancelar',
+                'language-saved': '¡Idioma cambiado exitosamente!',
+                'appeals-management': 'Gestión de Apelaciones',
+                'add-appeal': 'Agregar Apelación',
+                'appeal-date': 'Fecha de Apelación',
+                'reason': 'Razón',
+                'submitted-by': 'Enviado Por'
+            },
+            tl: {
+                'dashboard-title': 'Dashboard ng Guidance Counselor',
+                'navigation': 'Navegasyon',
+                'manage-tasks': 'Pamahalaan ang iyong mga gawain',
+                'violations': 'Mga Paglabag',
+                'appeals': 'Mga Apela',
+                'activity-log': 'Activity Log',
+                'total-violations': 'Kabuuang Paglabag',
+                'pending-appeals': 'Mga Pending na Apela',
+                'approved-appeals': 'Mga Naaprubahang Apela',
+                'violations-management': 'Pamamahala ng Uniform Violations',
+                'add-violation': 'Magdagdag ng Paglabag',
+                'clear-all': 'Linisin Lahat',
+                'search-violations': 'Maghanap ng paglabag...',
+                'search': 'Maghanap',
+                'student': 'Estudyante',
+                'student-id': 'ID ng Estudyante',
+                'violation': 'Paglabag',
+                'status': 'Estado',
+                'offense': 'Paglabag',
+                'actions': 'Mga Aksyon',
+                'delete': 'Tanggalin',
+                'edit': 'I-edit',
+                'view': 'Tingnan',
+                'help': 'Tulong',
+                'language': 'Wika',
+                'logout': 'Mag-logout',
+                'select-language': 'Pumili ng Wika',
+                'choose-language': 'Piliin ang iyong gustong wika:',
+                'save-language': 'I-save ang Wika',
+                'cancel': 'Kanselahin',
+                'language-saved': 'Matagumpay na napalitan ang wika!',
+                'appeals-management': 'Pamamahala ng Apela',
+                'add-appeal': 'Magdagdag ng Apela',
+                'appeal-date': 'Petsa ng Apela',
+                'reason': 'Dahilan',
+                'submitted-by': 'Isinumite Ni'
+            },
+            zh: {
+                'dashboard-title': '指导顾问仪表板',
+                'navigation': '导航',
+                'manage-tasks': '管理您的任务',
+                'violations': '违规',
+                'appeals': '申诉',
+                'activity-log': '活动日志',
+                'total-violations': '总违规数',
+                'pending-appeals': '待处理申诉',
+                'approved-appeals': '已批准申诉',
+                'violations-management': '制服违规管理',
+                'add-violation': '添加违规',
+                'clear-all': '清除全部',
+                'search-violations': '搜索违规...',
+                'search': '搜索',
+                'student': '学生',
+                'student-id': '学生ID',
+                'violation': '违规',
+                'status': '状态',
+                'offense': '违规',
+                'actions': '操作',
+                'delete': '删除',
+                'edit': '编辑',
+                'view': '查看',
+                'help': '帮助',
+                'language': '语言',
+                'logout': '登出',
+                'select-language': '选择语言',
+                'choose-language': '选择您偏好的语言:',
+                'save-language': '保存语言',
+                'cancel': '取消',
+                'language-saved': '语言更改成功！',
+                'appeals-management': '申诉管理',
+                'add-appeal': '添加申诉',
+                'appeal-date': '申诉日期',
+                'reason': '原因',
+                'submitted-by': '提交者'
+            },
+            ja: {
+                'dashboard-title': 'ガイダンスカウンセラーダッシュボード',
+                'navigation': 'ナビゲーション',
+                'manage-tasks': 'タスクを管理',
+                'violations': '違反',
+                'appeals': '申し立て',
+                'activity-log': 'アクティビティログ',
+                'total-violations': '総違反数',
+                'pending-appeals': '保留中の申し立て',
+                'approved-appeals': '承認された申し立て',
+                'violations-management': '制服違反管理',
+                'add-violation': '違反を追加',
+                'clear-all': 'すべてクリア',
+                'search-violations': '違反を検索...',
+                'search': '検索',
+                'student': '学生',
+                'student-id': '学生ID',
+                'violation': '違反',
+                'status': 'ステータス',
+                'offense': '違反',
+                'actions': 'アクション',
+                'delete': '削除',
+                'edit': '編集',
+                'view': '表示',
+                'help': 'ヘルプ',
+                'language': '言語',
+                'logout': 'ログアウト',
+                'select-language': '言語を選択',
+                'choose-language': '希望する言語を選択:',
+                'save-language': '言語を保存',
+                'cancel': 'キャンセル',
+                'language-saved': '言語が正常に変更されました！',
+                'appeals-management': '申し立て管理',
+                'add-appeal': '申し立てを追加',
+                'appeal-date': '申し立て日',
+                'reason': '理由',
+                'submitted-by': '提出者'
+            }
+        };
+        
+        // Apply translations to the page
+        function applyTranslations(lang) {
+            const langTranslations = translations[lang] || translations['en'];
+            
+            // Update elements with data-translate attribute
+            document.querySelectorAll('[data-translate]').forEach(element => {
+                const key = element.getAttribute('data-translate');
+                if (langTranslations[key]) {
+                    element.textContent = langTranslations[key];
+                }
+            });
+            
+            // Update placeholders
+            document.querySelectorAll('[data-translate-placeholder]').forEach(element => {
+                const key = element.getAttribute('data-translate-placeholder');
+                if (langTranslations[key]) {
+                    element.placeholder = langTranslations[key];
+                }
+            });
+            
+            // Update title attributes
+            document.querySelectorAll('[data-translate-title]').forEach(element => {
+                const key = element.getAttribute('data-translate-title');
+                if (langTranslations[key]) {
+                    element.title = langTranslations[key];
+                }
+            });
+        }
+        
         // Language modal function
         function showLanguageModal() {
             // Close dropdown first
@@ -2507,13 +3168,13 @@
                 <div id="languageModal" class="modal" style="display: block;">
                     <div class="modal-content" style="max-width: 500px;">
                         <div class="modal-header">
-                            <h3 class="modal-title">Select Language</h3>
+                            <h3 class="modal-title" data-translate="select-language">Select Language</h3>
                             <button class="close-btn" onclick="closeModal('languageModal')">&times;</button>
                         </div>
                         <div class="modal-body" style="padding: 20px;">
                             <div style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #1c1e21;">Choose your preferred language:</label>
-                                <select id="languageSelect" style="width: 100%; padding: 10px; border: 2px solid #e4e6ea; border-radius: 6px; font-size: 14px; background: white; cursor: pointer;">
+                                <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #1c1e21;" data-translate="choose-language">Choose your preferred language:</label>
+                                <select id="languageSelect" style="width: 100%; padding: 10px; border: 2px solid #e4e6ea; border-radius: 6px; font-size: 14px; background: white; cursor: pointer;" onchange="changeLanguageImmediately(this.value)">
                                     <option value="en" ${currentLanguage === 'en' ? 'selected' : ''}>🇺🇸 English</option>
                                     <option value="es" ${currentLanguage === 'es' ? 'selected' : ''}>🇪🇸 Español (Spanish)</option>
                                     <option value="tl" ${currentLanguage === 'tl' ? 'selected' : ''}>🇵🇭 Tagalog (Filipino)</option>
@@ -2523,19 +3184,30 @@
                             </div>
                             <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-top: 15px;">
                                 <p style="margin: 0; color: #65676b; font-size: 13px;">
-                                    <strong>Note:</strong> Language selection will be saved and applied to your next session.
+                                    <strong>Note:</strong> <span data-translate="language-saved">Language changes will be applied immediately.</span>
                                 </p>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button class="btn btn-primary" onclick="saveLanguage()">Save Language</button>
-                            <button class="btn btn-secondary" onclick="closeModal('languageModal')">Cancel</button>
+                            <button class="btn btn-primary" onclick="saveLanguage()" data-translate="save-language">Save Language</button>
+                            <button class="btn btn-secondary" onclick="closeModal('languageModal')" data-translate="cancel">Cancel</button>
                         </div>
                     </div>
                 </div>
             `;
             
             document.body.insertAdjacentHTML('beforeend', languageModalHtml);
+            
+            // Apply translations to modal
+            const savedLang = localStorage.getItem('selectedLanguage') || 'en';
+            applyTranslations(savedLang);
+        }
+        
+        // Change language immediately when dropdown changes
+        function changeLanguageImmediately(lang) {
+            localStorage.setItem('selectedLanguage', lang);
+            applyTranslations(lang);
+            showAlert(translations[lang]?.['language-saved'] || 'Language changed successfully!', 'success');
         }
         
         // Save language selection
@@ -2543,16 +3215,8 @@
             const languageSelect = document.getElementById('languageSelect');
             if (languageSelect) {
                 const selectedLanguage = languageSelect.value;
-                localStorage.setItem('selectedLanguage', selectedLanguage);
-                
-                // Show success message
-                showAlert('Language preference saved successfully!', 'success');
-                
-                // Close modal
+                changeLanguageImmediately(selectedLanguage);
                 closeModal('languageModal');
-                
-                // Note: Full language implementation would require translation files
-                // This is a basic framework for language selection
             }
         }
 
@@ -2771,8 +3435,12 @@
 
 
         // Search functionality
+        // Store current search term for violations
+        let currentViolationSearchTerm = '';
+
         function searchViolations() {
             const searchTerm = document.getElementById('violationSearch').value.toLowerCase();
+            currentViolationSearchTerm = searchTerm;
             const rows = document.querySelectorAll('#violationsTableBody tr');
             
             rows.forEach(row => {
@@ -2782,6 +3450,17 @@
             
             // Recalculate counts after search
             refreshViolationCounts();
+        }
+        
+        // Reapply search filter after table rebuild
+        function reapplyViolationSearch() {
+            if (currentViolationSearchTerm) {
+                const rows = document.querySelectorAll('#violationsTableBody tr');
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(currentViolationSearchTerm) ? '' : 'none';
+                });
+            }
         }
 
         function searchAppeals() {
@@ -2865,10 +3544,12 @@
                 
                 studentRow.innerHTML = `
                     <td style="text-align: left; vertical-align: middle; padding-right: 8px;">
-                        <span class="clickable-student-name" onclick="viewStudentAppeals('${studentName}')" title="Click to view all appeals for ${studentName}">
-                            <strong>${studentName}</strong>
-                        </span>
-                        <span class="appeal-count-badge">(${count} appeal${count > 1 ? 's' : ''})</span>
+                        <div class="student-info-container">
+                            <span class="clickable-student-name student-name-display" onclick="viewStudentAppeals('${studentName}')" title="Click to view all appeals for ${studentName}">
+                                ${studentName}
+                            </span>
+                            <span class="appeal-count-badge">${count} appeal${count > 1 ? 's' : ''}</span>
+                        </div>
                     </td>
                     <td style="text-align: left; vertical-align: middle; padding-left: 8px; width: 120px;">
                         <span style="color: #666; font-size: 14px;">${studentId}</span>
@@ -2943,10 +3624,12 @@
                 
                 studentRow.innerHTML = `
                     <td style="text-align: left; vertical-align: middle; padding-right: 8px;">
-                        <span class="clickable-student-name" onclick="viewStudentAppeals('${studentName}')" title="Click to view all appeals for ${studentName}">
-                            <strong>${studentName}</strong>
-                        </span>
-                        <span class="appeal-count-badge">(${count} appeal${count > 1 ? 's' : ''})</span>
+                        <div class="student-info-container">
+                            <span class="clickable-student-name student-name-display" onclick="viewStudentAppeals('${studentName}')" title="Click to view all appeals for ${studentName}">
+                                ${studentName}
+                            </span>
+                            <span class="appeal-count-badge">${count} appeal${count > 1 ? 's' : ''}</span>
+                        </div>
                     </td>
                     <td style="text-align: left; vertical-align: middle; padding-left: 8px; width: 120px;">
                         <span style="color: #666; font-size: 14px;">${studentId}</span>
@@ -3977,6 +4660,8 @@
                         // Recalculate counts and grouping
                         calculateViolationCounts();
                         groupViolationRows();
+                        // Reapply search filter after table update
+                        setTimeout(() => reapplyViolationSearch(), 100);
                         groupAppealRows();
                     } else if (Array.isArray(result)) {
                         console.log('Fresh violations data (array):', result);
@@ -3985,6 +4670,8 @@
                         updateViolationsTable(result);
                         calculateViolationCounts();
                         groupViolationRows();
+                        // Reapply search filter after table update
+                        setTimeout(() => reapplyViolationSearch(), 100);
                         groupAppealRows();
                     }
                 })
@@ -4091,6 +4778,9 @@
             });
             
             console.log(`Updated violations table with ${violations.length} violations`);
+            
+            // Reapply search filter after table update
+            setTimeout(() => reapplyViolationSearch(), 100);
         }
 
         function updateAppealsTable(appeals) {
@@ -4157,9 +4847,13 @@
                     if (result.success && result.data) {
                         console.log('Fresh violations data:', result.data);
                         buildGroupedViolationsTable(result.data);
+                        // Reapply search filter after building table
+                        setTimeout(() => reapplyViolationSearch(), 100);
                     } else {
                         // Fallback to grouping existing rows
                         groupViolationRows();
+                        // Reapply search filter after grouping
+                        setTimeout(() => reapplyViolationSearch(), 100);
                     }
                 })
                 .catch(error => {
@@ -4235,6 +4929,9 @@
                 
                 tableBody.appendChild(studentRow);
             });
+            
+            // Reapply search filter after grouping
+            reapplyViolationSearch();
         }
 
         function buildGroupedViolationsTable(violations) {
@@ -4367,6 +5064,9 @@
                 detailsRow.appendChild(detailsCell);
                 tableBody.appendChild(detailsRow);
             });
+            
+            // Reapply search filter after building table
+            reapplyViolationSearch();
         }
 
         function buildGroupedViolationsTableFromTable() {
@@ -4391,6 +5091,8 @@
             });
 
             buildGroupedViolationsTable(violations);
+            // Reapply search filter after building table
+            setTimeout(() => reapplyViolationSearch(), 100);
         }
 
         function getCountClass(count) {
@@ -5229,6 +5931,10 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
+            // Load saved language and apply translations
+            const savedLanguage = localStorage.getItem('selectedLanguage') || 'en';
+            applyTranslations(savedLanguage);
+            
             // Check if there's a stored active tab
             const storedTab = sessionStorage.getItem('activeTab');
             if (storedTab) {
