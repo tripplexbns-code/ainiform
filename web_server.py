@@ -105,6 +105,8 @@ def get_student_violations_from_firebase():
                 'reported_by': vh.get('reported_by', 'System'),
                 'severity': vh.get('severity', 'Medium'),
                 'last_updated': vh.get('last_updated', ''),  # Include last_updated from Firebase
+                'timestamp': vh.get('timestamp', vh.get('last_updated', vh.get('created_at', ''))),  # Include timestamp field
+                'created_at': vh.get('created_at', ''),
                 'last_missing_items': vh.get('last_missing_items', []),  # Include last_missing_items from Firebase
                 'missing_items': vh.get('missing_items', []),  # Include missing_items from Firebase
                 'source': 'violation_history'  # Mark as coming from violation_history subcollection
@@ -231,25 +233,16 @@ def get_student_violations_as_appeals():
         formatted_appeals = []
         for vh in violation_history:
             # Extract data from violation_history and format as appeal
-            # Determine the date to display - use approved_date if approved, otherwise use appeal_date
-            status = vh.get('appeal_status', vh.get('status', 'Pending Review'))
-            display_date = ''
-            if status == 'Approved' and vh.get('approved_date'):
-                display_date = vh.get('approved_date')
-            else:
-                display_date = vh.get('date', vh.get('appeal_date', vh.get('created_at', '')))
-            
             formatted_appeal = {
                 'id': vh.get('id', ''),
                 'parent_doc_id': vh.get('parent_doc_id', ''),  # Store parent doc ID for reference
                 'student_name': vh.get('student_name', vh.get('name', 'N/A')),
                 'student_id': vh.get('student_id', 'N/A'),
                 'violation_id': vh.get('id', ''),  # Use the same ID as violation_id
-                'appeal_date': display_date,  # Use approved_date if approved, otherwise appeal_date
-                'approved_date': vh.get('approved_date', ''),  # Include approved_date separately
+                'appeal_date': vh.get('date', vh.get('appeal_date', vh.get('created_at', ''))),
                 'appeal_reason': vh.get('appeal_reason', vh.get('reason', vh.get('description', 'Appeal for violation'))),
                 'reason': vh.get('appeal_reason', vh.get('reason', vh.get('description', 'Appeal for violation'))),
-                'status': status,
+                'status': vh.get('appeal_status', vh.get('status', 'Pending Review')),
                 'submitted_by': vh.get('submitted_by', vh.get('student_name', vh.get('name', 'Student'))),
                 'priority': vh.get('priority', 'Medium'),
                 'reason_type': vh.get('reason_type', 'Unexcused'),
@@ -657,24 +650,15 @@ def get_student_appeals_from_firebase():
                 if student_name_from_db:
                     student_name = student_name_from_db
             
-            # Determine the date to display - use approved_date if approved, otherwise use appeal_date
-            status = appeal.get('status', 'Pending Review')
-            display_date = ''
-            if status == 'Approved' and appeal.get('approved_date'):
-                display_date = appeal.get('approved_date')
-            else:
-                display_date = appeal.get('appeal_date', appeal.get('date', ''))
-            
             formatted_appeal = {
                 'id': appeal.get('id', ''),
                 'student_name': student_name,
                 'student_id': student_id,
                 'violation_id': appeal.get('violation_id', ''),
-                'appeal_date': display_date,  # Use approved_date if approved, otherwise appeal_date
-                'approved_date': appeal.get('approved_date', ''),  # Include approved_date separately
+                'appeal_date': appeal.get('appeal_date', appeal.get('date', '')),
                 'appeal_reason': appeal.get('appeal_reason', appeal.get('reason', '')),
                 'reason': appeal.get('appeal_reason', appeal.get('reason', '')),
-                'status': status,
+                'status': appeal.get('status', 'Pending Review'),
                 'submitted_by': appeal.get('submitted_by', appeal.get('student_name', 'Student')),
                 'priority': appeal.get('priority', 'Medium'),
                 'reason_type': appeal.get('reason_type', 'Unexcused'),
@@ -1308,6 +1292,8 @@ def api_get_student_violations(student_id):
                     'status': vh.get('status', 'Pending'),
                     'date': vh.get('date', vh.get('created_at', '')),
                     'last_updated': vh.get('last_updated', ''),
+                    'timestamp': vh.get('timestamp', vh.get('last_updated', vh.get('created_at', ''))),  # Include timestamp field
+                    'created_at': vh.get('created_at', ''),
                     'missing_items': vh.get('missing_items', []),  # Include missing_items field
                     'last_missing_items': vh.get('last_missing_items', []),  # Also check last_missing_items
                     'description': vh.get('description', ''),
@@ -1591,12 +1577,6 @@ def api_update_appeal(appeal_id):
         
         # Check if appeal is being approved
         violation_deleted = False
-        if data.get('status') == 'Approved':
-            # Add approval date when appeal is approved
-            from datetime import datetime
-            data['approved_date'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            print(f"[INFO] Appeal {appeal_id} approved on {data['approved_date']}")
-        
         if data.get('status') == 'Approved' and AUTO_DELETE_VIOLATIONS_ON_APPEAL_APPROVAL:
             print(f"[REFRESH] Appeal {appeal_id} is being approved - checking for related violation to delete...")
             try:

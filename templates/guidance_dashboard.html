@@ -2582,10 +2582,6 @@
                     <input type="text" class="form-input" name="student_id" pattern="[0-9]+" title="Please enter numbers only" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Email Address</label>
-                    <input type="email" class="form-input" name="email_address" required>
-                </div>
-                <div class="form-group">
                     <label class="form-label">Violation Type</label>
                     <select class="form-select" name="violation_type" required>
                         <option value="Incomplete Uniform">Incomplete Uniform</option>
@@ -2596,8 +2592,8 @@
                     <input type="date" class="form-input" name="date" id="violationDate" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <textarea class="form-input form-textarea" name="description" required></textarea>
+                    <label class="form-label">Missing Items</label>
+                    <textarea class="form-input form-textarea" name="description" required placeholder="Enter missing items (e.g., ID, Belt, Shoes)"></textarea>
                 </div>
                 <div class="action-buttons">
                     <button type="submit" class="btn btn-primary">Save Violation</button>
@@ -2620,6 +2616,10 @@
                 <div class="form-group">
                     <label class="form-label">Student Name</label>
                     <input type="text" class="form-input" name="student_name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Student ID</label>
+                    <input type="text" class="form-input" name="student_id" pattern="[0-9]+" title="Please enter numbers only" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Reason Type</label>
@@ -3310,7 +3310,7 @@
                     showAlert('Appeal approved and saved successfully!', 'success');
                     
                     // Log activity
-                    logActivity('add', 'appeal', 'Appeal Added', `New appeal submitted by ${data.student_name}`, `Reason: ${data.reason_type}`);
+                    logActivity('add', 'appeal', 'Appeal Added', `New appeal submitted by ${data.student_name}`, `Reason: ${data.reason_type}, Student ID: ${data.student_id || 'N/A'}`);
                     
                     closeModal('appealModal');
                     
@@ -3386,6 +3386,11 @@
             // Validate required fields
             if (!data.reason_type) {
                 showAlert('Please select a reason type (Excused or Unexcused)', 'error');
+                return;
+            }
+            
+            if (!data.reason || data.reason.trim() === '') {
+                showAlert('Please provide reason details', 'error');
                 return;
             }
             
@@ -5592,20 +5597,9 @@
                             <div class="appeals-list">
                                 ${appeals.map((appeal, index) => {
                                     const appealId = appeal.id || appeal._id || `appeal-${index}`;
-                                    // Use approved_date if status is Approved, otherwise use appeal_date
-                                    let appealDate = 'No Date';
-                                    if (appeal.status === 'Approved' && appeal.approved_date) {
-                                        try {
-                                            // Format approved_date (format: YYYY-MM-DD HH:MM:SS)
-                                            const approvedDateStr = appeal.approved_date.split(' ')[0]; // Get date part
-                                            const dateObj = new Date(approvedDateStr);
-                                            appealDate = dateObj.toLocaleDateString();
-                                        } catch (e) {
-                                            appealDate = appeal.approved_date;
-                                        }
-                                    } else {
-                                        appealDate = appeal.appeal_date || appeal.date || appeal.created_date || appeal.submitted_date || 'No Date';
-                                    }
+                                    const appealDate = appeal.status === 'Approved' && appeal.approved_date 
+                                        ? new Date(appeal.approved_date).toLocaleDateString() 
+                                        : appeal.date || appeal.created_date || appeal.submitted_date || appeal.appeal_date || 'No Date';
                                     const appealStatus = appeal.status || 'Pending Review';
                                     // Show "Pending Review" as reason type if appeal is not approved, otherwise show actual reason type
                                     const reasonType = appealStatus === 'Approved' 
@@ -5821,35 +5815,77 @@
                         <div class="modal-body">
                             <div class="violations-list">
                                 ${violations.map((violation, index) => {
-                                    // Format date and time from last_updated
+                                    // Format date and time from timestamp field (check multiple possible field names)
                                     let dateDisplay = '';
                                     let timeDisplay = '';
-                                    if (violation.last_updated) {
+                                    
+                                    // Try to get timestamp from various possible field names
+                                    const timestamp = violation.timestamp || violation.last_updated || violation.created_at || violation.date || '';
+                                    
+                                    if (timestamp) {
                                         try {
-                                            // Parse last_updated format: "YYYY-MM-DD HH:MM:SS"
-                                            const lastUpdated = violation.last_updated;
-                                            const dateTimeParts = lastUpdated.split(' ');
-                                            if (dateTimeParts.length >= 2) {
-                                                const datePart = dateTimeParts[0];
-                                                const timePart = dateTimeParts[1];
+                                            // Handle different timestamp formats
+                                            let dateObj;
+                                            let dateStr = '';
+                                            let timeStr = '';
+                                            
+                                            // If timestamp is already in "YYYY-MM-DD HH:MM:SS" format
+                                            if (typeof timestamp === 'string' && timestamp.includes(' ')) {
+                                                const dateTimeParts = timestamp.split(' ');
+                                                if (dateTimeParts.length >= 2) {
+                                                    dateStr = dateTimeParts[0];
+                                                    timeStr = dateTimeParts[1];
+                                                    dateObj = new Date(dateStr + 'T' + timeStr);
+                                                }
+                                            }
+                                            // If timestamp is in ISO format or date string
+                                            else if (typeof timestamp === 'string') {
+                                                dateObj = new Date(timestamp);
+                                            }
+                                            // If timestamp is a number (Unix timestamp)
+                                            else if (typeof timestamp === 'number') {
+                                                dateObj = new Date(timestamp * 1000); // Convert seconds to milliseconds if needed
+                                                if (isNaN(dateObj.getTime())) {
+                                                    dateObj = new Date(timestamp); // Try as milliseconds
+                                                }
+                                            }
+                                            
+                                            if (dateObj && !isNaN(dateObj.getTime())) {
                                                 // Format date as MM/DD/YYYY
-                                                const dateObj = new Date(datePart + 'T' + timePart);
                                                 dateDisplay = dateObj.toLocaleDateString('en-US', {month: '2-digit', day: '2-digit', year: 'numeric'});
-                                                // Format time as HH:MM
-                                                timeDisplay = timePart.substring(0, 5);
+                                                
+                                                // Format time as HH:MM (24-hour format)
+                                                const hours = String(dateObj.getHours()).padStart(2, '0');
+                                                const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+                                                timeDisplay = `${hours}:${minutes}`;
+                                                
+                                                // If we already have timeStr from parsing, use it
+                                                if (timeStr && timeStr.length >= 5) {
+                                                    timeDisplay = timeStr.substring(0, 5);
+                                                }
                                             }
                                         } catch (e) {
-                                            console.error('Error parsing last_updated:', e);
+                                            console.error('Error parsing timestamp:', e, 'timestamp value:', timestamp);
                                         }
                                     }
-                                    // Fallback to date field if last_updated is not available
+                                    
+                                    // Fallback to date field if timestamp parsing failed
                                     if (!dateDisplay && violation.date) {
                                         try {
                                             const dateObj = new Date(violation.date);
-                                            dateDisplay = dateObj.toLocaleDateString('en-US', {month: '2-digit', day: '2-digit', year: 'numeric'});
+                                            if (!isNaN(dateObj.getTime())) {
+                                                dateDisplay = dateObj.toLocaleDateString('en-US', {month: '2-digit', day: '2-digit', year: 'numeric'});
+                                            } else {
+                                                dateDisplay = violation.date;
+                                            }
                                         } catch (e) {
                                             dateDisplay = violation.date;
                                         }
+                                    }
+                                    
+                                    // If still no date, show a placeholder
+                                    if (!dateDisplay) {
+                                        dateDisplay = 'No date available';
                                     }
                                     
                                     // Format missing_items or last_missing_items as numbered list
@@ -5876,10 +5912,10 @@
                                                 <span class="violation-type" style="font-weight: 600; font-size: 15px;">${violation.violation_type || 'Incomplete Uniform'}</span>
                                                 <div style="display: flex; flex-direction: column; gap: 3px;">
                                                     <div style="font-size: 13px; color: #666;">
-                                                        <strong>Date:</strong> ${dateDisplay || 'No date'}
+                                                        <strong>Date:</strong> ${dateDisplay}
                                                     </div>
                                                     ${timeDisplay ? `
-                                                    <div style="font-size: 13px; color: #666;">
+                                                    <div style="font-size: 13px; color: #666; margin-top: 2px;">
                                                         <strong>Time:</strong> ${timeDisplay}
                                                     </div>
                                                     ` : ''}
@@ -6045,7 +6081,7 @@
             document.getElementById('violationDate').value = today;
             
             // Prevent non-numeric input in Student ID fields
-            const studentIdInputs = document.querySelectorAll('input[name="student_id"], #editStudentId');
+            const studentIdInputs = document.querySelectorAll('input[name="student_id"], #editStudentId, input[name="student_id"][form="appealForm"]');
             studentIdInputs.forEach(function(input) {
                 input.addEventListener('input', function(e) {
                     // Remove any non-numeric characters
