@@ -335,6 +335,82 @@ class FirebaseManager:
             print(f"[ERROR] Error searching documents: {e}")
             return []
     
+    def get_subcollection_documents(self, collection_name, doc_id, subcollection_name, limit=100):
+        """Get documents from a subcollection"""
+        try:
+            if self.db:
+                print(f"[INFO] Querying {collection_name}/{doc_id}/{subcollection_name} subcollection...")
+                docs = self.db.collection(collection_name).document(doc_id).collection(subcollection_name).limit(limit).stream()
+                documents = []
+                count = 0
+                for doc in docs:
+                    doc_data = doc.to_dict()
+                    doc_data['id'] = doc.id
+                    doc_data['parent_doc_id'] = doc_id  # Store parent document ID for reference
+                    documents.append(doc_data)
+                    count += 1
+                    if count >= limit:
+                        break
+                print(f"[OK] Retrieved {len(documents)} documents from {collection_name}/{doc_id}/{subcollection_name}")
+                return documents
+            else:
+                print("[ERROR] Firebase not initialized")
+                return []
+        except Exception as e:
+            print(f"[ERROR] Error getting subcollection documents: {e}")
+            return []
+    
+    def get_all_subcollection_documents(self, collection_name, subcollection_name, limit=100):
+        """Get all documents from a subcollection across all parent documents"""
+        try:
+            if self.db:
+                print(f"[INFO] Querying all {subcollection_name} subcollections under {collection_name}...")
+                all_documents = []
+                
+                # Get all parent documents
+                parent_docs = self.db.collection(collection_name).limit(limit).stream()
+                
+                for parent_doc in parent_docs:
+                    parent_id = parent_doc.id
+                    parent_data = parent_doc.to_dict()
+                    
+                    # Get subcollection documents for this parent
+                    subcollection_docs = self.db.collection(collection_name).document(parent_id).collection(subcollection_name).stream()
+                    
+                    for doc in subcollection_docs:
+                        doc_data = doc.to_dict()
+                        doc_data['id'] = doc.id
+                        doc_data['parent_doc_id'] = parent_id
+                        # Include parent document data for reference
+                        if parent_data:
+                            doc_data['student_name'] = parent_data.get('name') or parent_data.get('student_name', 'N/A')
+                            doc_data['student_id'] = parent_data.get('student_id', 'N/A')
+                        all_documents.append(doc_data)
+                
+                print(f"[OK] Retrieved {len(all_documents)} documents from all {subcollection_name} subcollections")
+                return all_documents
+            else:
+                print("[ERROR] Firebase not initialized")
+                return []
+        except Exception as e:
+            print(f"[ERROR] Error getting all subcollection documents: {e}")
+            return []
+    
+    def delete_subcollection_document(self, collection_name, doc_id, subcollection_name, subcollection_doc_id):
+        """Delete a document from a subcollection"""
+        try:
+            if self.db:
+                doc_ref = self.db.collection(collection_name).document(doc_id).collection(subcollection_name).document(subcollection_doc_id)
+                doc_ref.delete()
+                print(f"[OK] Document {subcollection_doc_id} deleted from {collection_name}/{doc_id}/{subcollection_name}")
+                return True
+            else:
+                print("[ERROR] Firebase not initialized")
+                return False
+        except Exception as e:
+            print(f"[ERROR] Error deleting subcollection document: {e}")
+            return False
+    
     def authenticate_user(self, username, password):
         """Authenticate user with Firebase Auth (placeholder for now)"""
         try:
@@ -382,6 +458,18 @@ def delete_from_firebase(collection, doc_id):
 def search_in_firebase(collection, field, value, limit=100):
     """Search data in Firebase collection"""
     return firebase_manager.search_documents(collection, field, value, limit)
+
+def get_from_subcollection(collection_name, doc_id, subcollection_name, limit=100):
+    """Get data from Firebase subcollection"""
+    return firebase_manager.get_subcollection_documents(collection_name, doc_id, subcollection_name, limit)
+
+def get_all_from_subcollection(collection_name, subcollection_name, limit=100):
+    """Get all data from a subcollection across all parent documents"""
+    return firebase_manager.get_all_subcollection_documents(collection_name, subcollection_name, limit)
+
+def delete_from_subcollection(collection_name, doc_id, subcollection_name, subcollection_doc_id):
+    """Delete data from Firebase subcollection"""
+    return firebase_manager.delete_subcollection_document(collection_name, doc_id, subcollection_name, subcollection_doc_id)
 
 def upload_to_storage(local_path: str, destination_path: str, make_public: bool = True) -> str:
     """Helper to upload a local file to Firebase Storage and return its URL."""

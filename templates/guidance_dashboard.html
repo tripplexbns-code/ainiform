@@ -2633,10 +2633,6 @@
                     <label class="form-label">Appeal Date</label>
                     <input type="date" class="form-input" name="appeal_date" required>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Reason Details</label>
-                    <textarea class="form-input form-textarea" name="reason" placeholder="Provide detailed explanation for the appeal..." required></textarea>
-                </div>
                 <div class="action-buttons">
                     <button type="submit" class="btn btn-success">Approve</button>
                     <button type="button" class="btn btn-secondary" onclick="closeModal('appealModal')">Cancel</button>
@@ -3295,11 +3291,6 @@
                 return;
             }
             
-            if (!data.reason || data.reason.trim() === '') {
-                showAlert('Please provide reason details', 'error');
-                return;
-            }
-            
             // Automatically set status to approved
             data.status = 'Approved';
             data.approved_date = new Date().toISOString();
@@ -3319,7 +3310,7 @@
                     showAlert('Appeal approved and saved successfully!', 'success');
                     
                     // Log activity
-                    logActivity('add', 'appeal', 'Appeal Added', `New appeal submitted by ${data.student_name}`, `Reason: ${data.reason_type}, Details: ${data.reason.substring(0, 50)}...`);
+                    logActivity('add', 'appeal', 'Appeal Added', `New appeal submitted by ${data.student_name}`, `Reason: ${data.reason_type}`);
                     
                     closeModal('appealModal');
                     
@@ -3395,11 +3386,6 @@
             // Validate required fields
             if (!data.reason_type) {
                 showAlert('Please select a reason type (Excused or Unexcused)', 'error');
-                return;
-            }
-            
-            if (!data.reason || data.reason.trim() === '') {
-                showAlert('Please provide reason details', 'error');
                 return;
             }
             
@@ -4638,8 +4624,8 @@
                 });
             }
             
-            // Fetch fresh violations data with cache busting
-            fetch('/api/violations?t=' + Date.now(), {
+            // Fetch fresh uniform violations management data with cache busting
+            fetch('/api/uniform-violations-management?t=' + Date.now(), {
                 credentials: 'same-origin',
                 cache: 'no-cache'
             })
@@ -4651,33 +4637,55 @@
                 })
                 .then(result => {
                     if (result.success && result.data) {
-                        console.log('Fresh violations data:', result.data);
-                        console.log('Updating violations table with', result.data.length, 'violations');
-                        // Check and log new violations from student_violations
-                        checkAndLogNewViolations(result.data);
-                        // Update the violations table
-                        updateViolationsTable(result.data);
-                        // Recalculate counts and grouping
-                        calculateViolationCounts();
-                        groupViolationRows();
+                        console.log('Fresh uniform violations management data:', result.data);
+                        console.log('Updating violations table with', result.data.length, 'students');
+                        // Update the violations table with grouped data
+                        updateUniformViolationsTable(result.data);
                         // Reapply search filter after table update
                         setTimeout(() => reapplyViolationSearch(), 100);
-                        groupAppealRows();
-                    } else if (Array.isArray(result)) {
-                        console.log('Fresh violations data (array):', result);
-                        // Check and log new violations from student_violations
-                        checkAndLogNewViolations(result);
-                        updateViolationsTable(result);
-                        calculateViolationCounts();
-                        groupViolationRows();
-                        // Reapply search filter after table update
-                        setTimeout(() => reapplyViolationSearch(), 100);
-                        groupAppealRows();
+                    } else {
+                        // Fallback to old API if new one fails
+                        fetch('/api/violations?t=' + Date.now(), {
+                            credentials: 'same-origin',
+                            cache: 'no-cache'
+                        })
+                        .then(response => response.json())
+                        .then(fallbackResult => {
+                            if (fallbackResult.success && fallbackResult.data) {
+                                updateViolationsTable(fallbackResult.data);
+                                calculateViolationCounts();
+                                groupViolationRows();
+                            } else if (Array.isArray(fallbackResult)) {
+                                updateViolationsTable(fallbackResult);
+                                calculateViolationCounts();
+                                groupViolationRows();
+                            }
+                        });
                     }
                 })
                 .catch(error => {
-                    console.error('Error refreshing violations data:', error);
-                    hasErrors = true;
+                    console.error('Error refreshing uniform violations data:', error);
+                    // Fallback to old API
+                    fetch('/api/violations?t=' + Date.now(), {
+                        credentials: 'same-origin',
+                        cache: 'no-cache'
+                    })
+                    .then(response => response.json())
+                    .then(fallbackResult => {
+                        if (fallbackResult.success && fallbackResult.data) {
+                            updateViolationsTable(fallbackResult.data);
+                            calculateViolationCounts();
+                            groupViolationRows();
+                        } else if (Array.isArray(fallbackResult)) {
+                            updateViolationsTable(fallbackResult);
+                            calculateViolationCounts();
+                            groupViolationRows();
+                        }
+                    })
+                    .catch(fallbackError => {
+                        console.error('Error refreshing violations data:', fallbackError);
+                        hasErrors = true;
+                    });
                 });
             
             // Also fetch fresh appeals data with cache busting
@@ -4713,6 +4721,57 @@
                     console.log('Data refresh completed');
                     showAlert('Data refreshed successfully!', 'success');
                 });
+        }
+
+        function updateUniformViolationsTable(managementData) {
+            console.log('updateUniformViolationsTable called with:', managementData);
+            console.log('Number of students to display:', managementData ? managementData.length : 0);
+            
+            const tableBody = document.getElementById('violationsTableBody');
+            if (!tableBody) {
+                console.error('Violations table body not found');
+                return;
+            }
+            
+            console.log('Found violations table body, updating...');
+            
+            // Clear existing content
+            tableBody.innerHTML = '';
+            
+            // Add rows for each student (already grouped)
+            managementData.forEach(studentData => {
+                const row = document.createElement('tr');
+                row.className = 'violation-row';
+                row.setAttribute('data-student-id', studentData.student_id);
+                row.setAttribute('data-student-name', studentData.student_name);
+                
+                const statusClass = studentData.status.toLowerCase().replace(/\s+/g, '-');
+                
+                row.innerHTML = `
+                    <td class="student-name-cell">
+                        ${studentData.student_name || 'Unknown Student'}
+                    </td>
+                    <td class="student-id-cell">
+                        ${studentData.student_id || 'No ID'}
+                    </td>
+                    <td>${studentData.violation_type || 'Incomplete Uniform'}</td>
+                    <td><span class="status-badge status-${statusClass}">${studentData.status || 'Warning'}</span></td>
+                    <td class="count-cell">
+                        <span class="violation-count-badge">${studentData.offense_count || 0}</span>
+                    </td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="viewStudentViolationsByStudentId('${studentData.student_id}')">View</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteAllStudentViolations('${studentData.student_name}')">Delete</button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            console.log(`Updated violations table with ${managementData.length} students`);
+            
+            // Reapply search filter after table update
+            setTimeout(() => reapplyViolationSearch(), 100);
         }
 
         function updateViolationsTable(violations) {
@@ -5533,9 +5592,20 @@
                             <div class="appeals-list">
                                 ${appeals.map((appeal, index) => {
                                     const appealId = appeal.id || appeal._id || `appeal-${index}`;
-                                    const appealDate = appeal.status === 'Approved' && appeal.approved_date 
-                                        ? new Date(appeal.approved_date).toLocaleDateString() 
-                                        : appeal.date || appeal.created_date || appeal.submitted_date || appeal.appeal_date || 'No Date';
+                                    // Use approved_date if status is Approved, otherwise use appeal_date
+                                    let appealDate = 'No Date';
+                                    if (appeal.status === 'Approved' && appeal.approved_date) {
+                                        try {
+                                            // Format approved_date (format: YYYY-MM-DD HH:MM:SS)
+                                            const approvedDateStr = appeal.approved_date.split(' ')[0]; // Get date part
+                                            const dateObj = new Date(approvedDateStr);
+                                            appealDate = dateObj.toLocaleDateString();
+                                        } catch (e) {
+                                            appealDate = appeal.approved_date;
+                                        }
+                                    } else {
+                                        appealDate = appeal.appeal_date || appeal.date || appeal.created_date || appeal.submitted_date || 'No Date';
+                                    }
                                     const appealStatus = appeal.status || 'Pending Review';
                                     // Show "Pending Review" as reason type if appeal is not approved, otherwise show actual reason type
                                     const reasonType = appealStatus === 'Approved' 
@@ -5694,6 +5764,26 @@
         }
 
 
+        function viewStudentViolationsByStudentId(studentId) {
+            // Fetch all violations for this student_id from violation_history
+            fetch(`/api/violations/student/${encodeURIComponent(studentId)}`, {
+                credentials: 'same-origin'
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success && result.data) {
+                        const studentViolations = result.data;
+                        const studentName = studentViolations.length > 0 ? studentViolations[0].student_name : 'Unknown Student';
+                        showStudentViolationsModal(studentName, studentViolations);
+                    } else {
+                        showAlert('Error fetching violations for student ID: ' + studentId, 'error');
+                    }
+                })
+                .catch(error => {
+                    showAlert('Error fetching violations: ' + error.message, 'error');
+                });
+        }
+
         function viewStudentViolations(studentName) {
             // Fetch all violations for this student
             fetch('/api/violations', {
@@ -5762,10 +5852,13 @@
                                         }
                                     }
                                     
-                                    // Format last_missing_items as numbered list
+                                    // Format missing_items or last_missing_items as numbered list
                                     let missingItemsContent = '';
-                                    if (violation.last_missing_items && Array.isArray(violation.last_missing_items) && violation.last_missing_items.length > 0) {
-                                        const missingItemsHtml = violation.last_missing_items.map((item, idx) => {
+                                    // Check missing_items first (primary field)
+                                    let missingItems = violation.missing_items || violation.last_missing_items || [];
+                                    
+                                    if (missingItems && Array.isArray(missingItems) && missingItems.length > 0) {
+                                        const missingItemsHtml = missingItems.map((item, idx) => {
                                             // Escape HTML in item text
                                             const escapedItem = String(item).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
                                             return `${idx + 1}. ${escapedItem}`;
@@ -5995,9 +6088,30 @@
                 calculateViolationCounts();
             });
             
-            // Calculate violation counts on page load
-            setTimeout(() => {
-                // Try to use server-side data first
+            // Load uniform violations management data on page load
+            fetch('/api/uniform-violations-management', {
+                credentials: 'same-origin',
+                cache: 'no-cache'
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success && result.data) {
+                    console.log('Loaded uniform violations management data on page load:', result.data);
+                    updateUniformViolationsTable(result.data);
+                } else {
+                    // Fallback to server-side data
+                    const serverViolations = window.violationsData || [];
+                    if (serverViolations.length > 0) {
+                        console.log('Using server-side violations data:', serverViolations);
+                        buildGroupedViolationsTable(serverViolations);
+                    } else {
+                        calculateViolationCounts();
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error loading uniform violations management data:', error);
+                // Fallback to server-side data
                 const serverViolations = window.violationsData || [];
                 if (serverViolations.length > 0) {
                     console.log('Using server-side violations data:', serverViolations);
@@ -6005,7 +6119,10 @@
                 } else {
                     calculateViolationCounts();
                 }
-                
+            });
+            
+            // Calculate violation counts on page load
+            setTimeout(() => {
                 // Load appeals data
                 loadAppealsData().then(appealsData => {
                     console.log('Loaded appeals data on page load:', appealsData);

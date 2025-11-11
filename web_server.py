@@ -8,6 +8,8 @@ from firebase_config import (
     update_in_firebase,
     delete_from_firebase,
     firebase_manager,
+    get_all_from_subcollection,
+    delete_from_subcollection,
 )
 from cloudinary_config import upload_image_to_cloudinary
 import tempfile
@@ -81,69 +83,184 @@ def get_sample_data(collection_name):
 
 
 def get_student_violations_from_firebase():
-    """Fetch student violations from Firebase and format them for display"""
+    """Fetch student violations from violation_history subcollection under student_violations"""
     try:
-        # Fetch from student_violations collection
-        student_violations = get_from_firebase("student_violations") or []
+        # Fetch from violation_history subcollection under student_violations
+        violation_history = get_all_from_subcollection("student_violations", "violation_history") or []
         
         # Format the data to match violations table structure
         formatted_violations = []
-        for sv in student_violations:
-            # Extract name and student_id from student_violations
+        for vh in violation_history:
+            # Extract data from violation_history subcollection
             formatted_violation = {
-                'id': sv.get('id', ''),
-                'student_name': sv.get('name', sv.get('student_name', 'N/A')),
-                'student_id': sv.get('student_id', 'N/A'),
-                'violation_type': sv.get('violation_type', 'Uniform Violation'),
-                'course': sv.get('course', ''),
-                'date': sv.get('date', sv.get('created_at', '')),
-                'description': sv.get('description', 'Student violation'),
-                'status': sv.get('status', 'Pending'),
-                'reported_by': sv.get('reported_by', 'System'),
-                'severity': sv.get('severity', 'Medium'),
-                'last_updated': sv.get('last_updated', ''),  # Include last_updated from Firebase
-                'last_missing_items': sv.get('last_missing_items', []),  # Include last_missing_items from Firebase
-                'source': 'student_violations'  # Mark as coming from student_violations collection
+                'id': vh.get('id', ''),
+                'parent_doc_id': vh.get('parent_doc_id', ''),  # Store parent doc ID for deletion
+                'student_name': vh.get('student_name', vh.get('name', 'N/A')),
+                'student_id': vh.get('student_id', 'N/A'),
+                'violation_type': vh.get('violation_type', 'Uniform Violation'),
+                'course': vh.get('course', ''),
+                'date': vh.get('date', vh.get('created_at', '')),
+                'description': vh.get('description', 'Student violation'),
+                'status': vh.get('status', 'Pending'),
+                'reported_by': vh.get('reported_by', 'System'),
+                'severity': vh.get('severity', 'Medium'),
+                'last_updated': vh.get('last_updated', ''),  # Include last_updated from Firebase
+                'last_missing_items': vh.get('last_missing_items', []),  # Include last_missing_items from Firebase
+                'missing_items': vh.get('missing_items', []),  # Include missing_items from Firebase
+                'source': 'violation_history'  # Mark as coming from violation_history subcollection
             }
             formatted_violations.append(formatted_violation)
         
-        print(f"[OK] Retrieved {len(formatted_violations)} violations from student_violations collection")
+        print(f"[OK] Retrieved {len(formatted_violations)} violations from violation_history subcollection")
         return formatted_violations
     except Exception as e:
-        print(f"[ERROR] Error fetching student_violations: {e}")
+        print(f"[ERROR] Error fetching violation_history: {e}")
+        return []
+
+
+def get_student_name_from_students_collection(student_id):
+    """Get student name from students collection by student_id"""
+    try:
+        if not student_id or student_id == 'N/A':
+            return None
+        
+        # Search for student in students collection by student_id
+        students = search_in_firebase("students", "student_id", student_id, limit=1)
+        if students and len(students) > 0:
+            student = students[0]
+            # Try different possible field names for student name
+            student_name = student.get('name') or student.get('student_name') or student.get('full_name') or student.get('first_name', '') + ' ' + student.get('last_name', '')
+            return student_name.strip() if student_name else None
+        return None
+    except Exception as e:
+        print(f"[ERROR] Error fetching student name for student_id {student_id}: {e}")
+        return None
+
+
+def get_uniform_violations_management_data():
+    """Get violations from violation_history grouped by student_id with student names from students collection"""
+    try:
+        # Get all violations from violation_history
+        violation_history = get_all_from_subcollection("student_violations", "violation_history") or []
+        
+        # Group violations by student_id
+        violations_by_student = {}
+        for vh in violation_history:
+            student_id = vh.get('student_id', 'N/A')
+            if student_id == 'N/A' or not student_id:
+                continue
+            
+            if student_id not in violations_by_student:
+                violations_by_student[student_id] = []
+            
+            # Get student name from students collection
+            student_name = get_student_name_from_students_collection(student_id)
+            if not student_name:
+                # Fallback to name from violation_history if not found in students collection
+                student_name = vh.get('student_name', vh.get('name', 'Unknown Student'))
+            
+            # Format violation data
+            violation_data = {
+                'id': vh.get('id', ''),
+                'parent_doc_id': vh.get('parent_doc_id', ''),
+                'student_id': student_id,
+                'student_name': student_name,
+                'violation_type': vh.get('violation_type', 'Uniform Violation'),
+                'status': vh.get('status', 'Pending'),
+                'date': vh.get('date', vh.get('created_at', '')),
+                'last_updated': vh.get('last_updated', ''),
+                'missing_items': vh.get('missing_items', []),  # Include missing_items field
+                'last_missing_items': vh.get('last_missing_items', []),  # Also check last_missing_items
+                'description': vh.get('description', ''),
+                'source': 'violation_history'
+            }
+            
+            violations_by_student[student_id].append(violation_data)
+        
+        # Create summary data for each student
+        summary_data = []
+        for student_id, violations in violations_by_student.items():
+            if not violations:
+                continue
+            
+            # Get student name from first violation (all should have same name)
+            student_name = violations[0].get('student_name', 'Unknown Student')
+            
+            # Count violations (offense count)
+            offense_count = len(violations)
+            
+            # Determine status based on offense count
+            if offense_count == 1:
+                status = 'Warning'
+            elif offense_count == 2:
+                status = 'Advisory'
+            elif offense_count >= 3:
+                status = 'Guidance'
+            else:
+                status = 'Warning'
+            
+            # Get latest violation type
+            latest_violation = violations[-1]  # Assuming violations are in chronological order
+            violation_type = latest_violation.get('violation_type', 'Uniform Violation')
+            
+            summary_data.append({
+                'student_id': student_id,
+                'student_name': student_name,
+                'violation_type': violation_type,
+                'status': status,
+                'offense_count': offense_count,
+                'violations': violations  # Store all violations for this student
+            })
+        
+        print(f"[OK] Retrieved {len(summary_data)} students with violations from violation_history")
+        return summary_data
+    except Exception as e:
+        print(f"[ERROR] Error fetching uniform violations management data: {e}")
+        import traceback
+        traceback.print_exc()
         return []
 
 
 def get_student_violations_as_appeals():
-    """Fetch student violations from Firebase and format them as appeals"""
+    """Fetch student violations from violation_history subcollection and format them as appeals"""
     try:
-        # Fetch from student_violations collection
-        student_violations = get_from_firebase("student_violations") or []
+        # Fetch from violation_history subcollection under student_violations
+        violation_history = get_all_from_subcollection("student_violations", "violation_history") or []
         
         # Format the data to match appeals table structure
         formatted_appeals = []
-        for sv in student_violations:
-            # Extract name and student_id from student_violations and format as appeal
+        for vh in violation_history:
+            # Extract data from violation_history and format as appeal
+            # Determine the date to display - use approved_date if approved, otherwise use appeal_date
+            status = vh.get('appeal_status', vh.get('status', 'Pending Review'))
+            display_date = ''
+            if status == 'Approved' and vh.get('approved_date'):
+                display_date = vh.get('approved_date')
+            else:
+                display_date = vh.get('date', vh.get('appeal_date', vh.get('created_at', '')))
+            
             formatted_appeal = {
-                'id': sv.get('id', ''),
-                'student_name': sv.get('name', sv.get('student_name', 'N/A')),
-                'student_id': sv.get('student_id', 'N/A'),
-                'violation_id': sv.get('id', ''),  # Use the same ID as violation_id
-                'appeal_date': sv.get('date', sv.get('appeal_date', sv.get('created_at', ''))),
-                'appeal_reason': sv.get('appeal_reason', sv.get('reason', sv.get('description', 'Appeal for violation'))),
-                'reason': sv.get('appeal_reason', sv.get('reason', sv.get('description', 'Appeal for violation'))),
-                'status': sv.get('appeal_status', sv.get('status', 'Pending Review')),
-                'submitted_by': sv.get('submitted_by', sv.get('student_name', sv.get('name', 'Student'))),
-                'priority': sv.get('priority', 'Medium'),
-                'reason_type': sv.get('reason_type', 'Unexcused'),
-                'source': 'student_violations'  # Mark as coming from student_violations collection
+                'id': vh.get('id', ''),
+                'parent_doc_id': vh.get('parent_doc_id', ''),  # Store parent doc ID for reference
+                'student_name': vh.get('student_name', vh.get('name', 'N/A')),
+                'student_id': vh.get('student_id', 'N/A'),
+                'violation_id': vh.get('id', ''),  # Use the same ID as violation_id
+                'appeal_date': display_date,  # Use approved_date if approved, otherwise appeal_date
+                'approved_date': vh.get('approved_date', ''),  # Include approved_date separately
+                'appeal_reason': vh.get('appeal_reason', vh.get('reason', vh.get('description', 'Appeal for violation'))),
+                'reason': vh.get('appeal_reason', vh.get('reason', vh.get('description', 'Appeal for violation'))),
+                'status': status,
+                'submitted_by': vh.get('submitted_by', vh.get('student_name', vh.get('name', 'Student'))),
+                'priority': vh.get('priority', 'Medium'),
+                'reason_type': vh.get('reason_type', 'Unexcused'),
+                'source': 'violation_history'  # Mark as coming from violation_history subcollection
             }
             formatted_appeals.append(formatted_appeal)
         
-        print(f"[OK] Retrieved {len(formatted_appeals)} appeals from student_violations collection")
+        print(f"[OK] Retrieved {len(formatted_appeals)} appeals from violation_history subcollection")
         return formatted_appeals
     except Exception as e:
-        print(f"[ERROR] Error fetching student_violations as appeals: {e}")
+        print(f"[ERROR] Error fetching violation_history as appeals: {e}")
         return []
 
 
@@ -397,15 +514,23 @@ def update_violation_in_firebase(violation_id, data):
 def cleanup_student_document_if_no_violations(student_name, student_id):
     """Check if student has any remaining violations and delete all student documents if none exist"""
     try:
-        # Get all remaining violations from student_violations collection (fresh fetch after deletions)
-        student_violations = get_from_firebase("student_violations") or []
+        # Get all remaining violations from violation_history subcollection (fresh fetch after deletions)
+        violation_history = get_all_from_subcollection("student_violations", "violation_history") or []
         
-        # Check if there are any remaining violations for this student
+        # Check if there are any remaining violations for this student in violation_history
         remaining_violations = [
-            v for v in student_violations 
-            if (v.get('name') == student_name or v.get('student_name') == student_name) and 
+            v for v in violation_history 
+            if (v.get('student_name') == student_name or v.get('name') == student_name) and 
                v.get('student_id') == student_id
         ]
+        
+        # Also check violations collection
+        violations = get_from_firebase("violations") or []
+        remaining_violations.extend([
+            v for v in violations 
+            if v.get('student_name') == student_name and 
+               v.get('student_id') == student_id
+        ])
         
         # If no violations remain, delete all remaining student documents for this student
         if not remaining_violations:
@@ -448,33 +573,48 @@ def cleanup_student_document_if_no_violations(student_name, student_id):
 
 
 def delete_violation_from_firebase(violation_id):
-    """Delete violation from Firebase - checks both violations and student_violations collections"""
+    """Delete violation from Firebase - checks violations collection and violation_history subcollection"""
     try:
         deleted_from_violations = False
-        deleted_from_student_violations = False
+        deleted_from_violation_history = False
         student_name = None
         student_id = None
+        parent_doc_id = None
         
-        # First, try to get student info from the violation before deleting
+        # First, try to get violation info from violation_history subcollection
         try:
-            # Try to get violation info from violations collection
-            violations = get_from_firebase("violations") or []
-            violation = next((v for v in violations if v.get('id') == violation_id), None)
+            violation_history = get_all_from_subcollection("student_violations", "violation_history") or []
+            violation = next((v for v in violation_history if v.get('id') == violation_id), None)
             if violation:
-                student_name = violation.get('student_name')
+                parent_doc_id = violation.get('parent_doc_id')
+                student_name = violation.get('student_name', violation.get('name'))
                 student_id = violation.get('student_id')
-            
-            # If not found, try student_violations collection
-            if not student_name:
-                student_violations = get_from_firebase("student_violations") or []
-                violation = next((v for v in student_violations if v.get('id') == violation_id), None)
-                if violation:
-                    student_name = violation.get('name') or violation.get('student_name')
-                    student_id = violation.get('student_id')
+                print(f"[INFO] Found violation {violation_id} in violation_history subcollection (parent: {parent_doc_id})")
         except Exception as e:
-            print(f"[WARN] Could not fetch student info before deletion: {e}")
+            print(f"[WARN] Could not fetch from violation_history: {e}")
         
-        # Try to delete from violations collection
+        # If not found in violation_history, try violations collection
+        if not parent_doc_id:
+            try:
+                violations = get_from_firebase("violations") or []
+                violation = next((v for v in violations if v.get('id') == violation_id), None)
+                if violation:
+                    student_name = violation.get('student_name')
+                    student_id = violation.get('student_id')
+                    print(f"[INFO] Found violation {violation_id} in violations collection")
+            except Exception as e:
+                print(f"[WARN] Could not fetch from violations collection: {e}")
+        
+        # Try to delete from violation_history subcollection if found there
+        if parent_doc_id:
+            try:
+                deleted_from_violation_history = delete_from_subcollection("student_violations", parent_doc_id, "violation_history", violation_id)
+                if deleted_from_violation_history:
+                    print(f"[OK] Deleted violation {violation_id} from violation_history subcollection (parent: {parent_doc_id})")
+            except Exception as e:
+                print(f"[WARN] Error deleting from violation_history subcollection: {e}")
+        
+        # Also try to delete from violations collection (in case it exists there too)
         try:
             deleted_from_violations = delete_from_firebase("violations", violation_id)
             if deleted_from_violations:
@@ -482,17 +622,9 @@ def delete_violation_from_firebase(violation_id):
         except Exception as e:
             print(f"[WARN] Error deleting from violations collection: {e}")
         
-        # Also try to delete from student_violations collection
-        try:
-            deleted_from_student_violations = delete_from_firebase("student_violations", violation_id)
-            if deleted_from_student_violations:
-                print(f"[OK] Deleted violation {violation_id} from student_violations collection")
-        except Exception as e:
-            print(f"[WARN] Error deleting from student_violations collection: {e}")
-        
-        # Return True if deleted from at least one collection
-        if deleted_from_violations or deleted_from_student_violations:
-            print(f"[OK] Violation {violation_id} deleted successfully (violations: {deleted_from_violations}, student_violations: {deleted_from_student_violations})")
+        # Return True if deleted from at least one location
+        if deleted_from_violations or deleted_from_violation_history:
+            print(f"[OK] Violation {violation_id} deleted successfully (violations: {deleted_from_violations}, violation_history: {deleted_from_violation_history})")
             
             # Clean up student document if no violations remain
             if student_name and student_id:
@@ -500,28 +632,166 @@ def delete_violation_from_firebase(violation_id):
             
             return True
         else:
-            print(f"[WARN] Violation {violation_id} not found in either collection")
+            print(f"[WARN] Violation {violation_id} not found in any collection or subcollection")
             return False
     except Exception as e:
         print(f"[ERROR] Error deleting violation: {e}")
         return False
 
 
-def update_appeal_in_firebase(appeal_id, data):
-    """Update appeal in Firebase"""
+def get_student_appeals_from_firebase():
+    """Fetch student appeals from student_appeals collection"""
     try:
-        return update_in_firebase("appeals", appeal_id, data)
+        # Get all appeals from student_appeals collection
+        student_appeals = get_from_firebase("student_appeals") or []
+        
+        # Format the data to match appeals table structure
+        formatted_appeals = []
+        for appeal in student_appeals:
+            # Get student name from students collection if available
+            student_id = appeal.get('student_id', 'N/A')
+            student_name = appeal.get('student_name', 'N/A')
+            
+            if student_id != 'N/A' and not student_name or student_name == 'N/A':
+                student_name_from_db = get_student_name_from_students_collection(student_id)
+                if student_name_from_db:
+                    student_name = student_name_from_db
+            
+            # Determine the date to display - use approved_date if approved, otherwise use appeal_date
+            status = appeal.get('status', 'Pending Review')
+            display_date = ''
+            if status == 'Approved' and appeal.get('approved_date'):
+                display_date = appeal.get('approved_date')
+            else:
+                display_date = appeal.get('appeal_date', appeal.get('date', ''))
+            
+            formatted_appeal = {
+                'id': appeal.get('id', ''),
+                'student_name': student_name,
+                'student_id': student_id,
+                'violation_id': appeal.get('violation_id', ''),
+                'appeal_date': display_date,  # Use approved_date if approved, otherwise appeal_date
+                'approved_date': appeal.get('approved_date', ''),  # Include approved_date separately
+                'appeal_reason': appeal.get('appeal_reason', appeal.get('reason', '')),
+                'reason': appeal.get('appeal_reason', appeal.get('reason', '')),
+                'status': status,
+                'submitted_by': appeal.get('submitted_by', appeal.get('student_name', 'Student')),
+                'priority': appeal.get('priority', 'Medium'),
+                'reason_type': appeal.get('reason_type', 'Unexcused'),
+                'created_at': appeal.get('created_at', ''),
+                'updated_at': appeal.get('updated_at', ''),
+                'source': 'student_appeals'  # Mark as coming from student_appeals collection
+            }
+            formatted_appeals.append(formatted_appeal)
+        
+        print(f"[OK] Retrieved {len(formatted_appeals)} appeals from student_appeals collection")
+        return formatted_appeals
+    except Exception as e:
+        print(f"[ERROR] Error fetching student_appeals: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
+
+
+def add_student_appeal_to_firebase(data):
+    """Add a new student appeal to student_appeals collection"""
+    try:
+        # Ensure required fields are present
+        if 'student_id' not in data or not data.get('student_id'):
+            print("[ERROR] student_id is required for student_appeals")
+            return None
+        
+        # Get student name from students collection if not provided
+        if 'student_name' not in data or not data.get('student_name'):
+            student_name = get_student_name_from_students_collection(data.get('student_id'))
+            if student_name:
+                data['student_name'] = student_name
+            else:
+                data['student_name'] = 'Unknown Student'
+        
+        # Set default values
+        if 'status' not in data or not data.get('status'):
+            data['status'] = 'Pending Review'
+        if 'reason_type' not in data or not data.get('reason_type'):
+            data['reason_type'] = 'Unexcused'
+        if 'priority' not in data or not data.get('priority'):
+            data['priority'] = 'Medium'
+        
+        # Add timestamp
+        from datetime import datetime
+        data['created_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        data['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        # Add appeal to student_appeals collection
+        doc_id = add_to_firebase("student_appeals", data)
+        if doc_id:
+            print(f"[OK] Student appeal added to student_appeals collection with ID: {doc_id}")
+            return doc_id
+        else:
+            print(f"[ERROR] Failed to add student appeal to student_appeals collection")
+            return None
+    except Exception as e:
+        print(f"[ERROR] Error adding student appeal: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
+def update_appeal_in_firebase(appeal_id, data):
+    """Update appeal in Firebase - checks both appeals and student_appeals collections"""
+    try:
+        # First check in student_appeals collection
+        student_appeals = get_from_firebase("student_appeals") or []
+        appeal = next((a for a in student_appeals if a.get('id') == appeal_id), None)
+        
+        if appeal:
+            # Update in student_appeals collection
+            from datetime import datetime
+            data['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            success = update_in_firebase("student_appeals", appeal_id, data)
+            if success:
+                print(f"[OK] Appeal {appeal_id} updated in student_appeals collection")
+            return success
+        else:
+            # Fallback to appeals collection
+            return update_in_firebase("appeals", appeal_id, data)
     except Exception as e:
         print(f"Error updating appeal: {e}")
         return False
 
 
 def delete_appeal_from_firebase(appeal_id):
-    """Delete appeal from Firebase"""
+    """Delete appeal from Firebase - checks both appeals and student_appeals collections"""
     try:
-        return delete_from_firebase("appeals", appeal_id)
+        deleted_from_student_appeals = False
+        deleted_from_appeals = False
+        
+        # First check in student_appeals collection
+        student_appeals = get_from_firebase("student_appeals") or []
+        appeal = next((a for a in student_appeals if a.get('id') == appeal_id), None)
+        
+        if appeal:
+            deleted_from_student_appeals = delete_from_firebase("student_appeals", appeal_id)
+            if deleted_from_student_appeals:
+                print(f"[OK] Appeal {appeal_id} deleted from student_appeals collection")
+        
+        # Also try to delete from appeals collection (in case it exists there too)
+        try:
+            deleted_from_appeals = delete_from_firebase("appeals", appeal_id)
+            if deleted_from_appeals:
+                print(f"[OK] Appeal {appeal_id} deleted from appeals collection")
+        except Exception as e:
+            print(f"[WARN] Error deleting from appeals collection: {e}")
+        
+        # Return True if deleted from at least one location
+        if deleted_from_student_appeals or deleted_from_appeals:
+            print(f"[OK] Appeal {appeal_id} deleted successfully (student_appeals: {deleted_from_student_appeals}, appeals: {deleted_from_appeals})")
+            return True
+        else:
+            print(f"[WARN] Appeal {appeal_id} not found in any collection")
+            return False
     except Exception as e:
-        print(f"Error deleting appeal: {e}")
+        print(f"[ERROR] Error deleting appeal: {e}")
         return False
 
 
@@ -806,7 +1076,7 @@ def api_violations():
             # Merge both collections
             all_violations = violations + student_violations
             
-            print(f"[API] GET /api/violations returning {len(all_violations)} violations (from violations: {len(violations)}, from student_violations: {len(student_violations)})")
+            print(f"[API] GET /api/violations returning {len(all_violations)} violations (from violations: {len(violations)}, from violation_history: {len(student_violations)})")
             return {"success": True, "data": all_violations}, 200
         except Exception as e:
             print(f"[ERROR] GET /api/violations failed: {e}")
@@ -1010,6 +1280,68 @@ def api_delete_violation(violation_id):
         return {"error": str(e)}, 500
 
 
+@app.route("/api/violations/student/<student_id>", methods=["GET"])
+def api_get_student_violations(student_id):
+    """API endpoint to get all violations for a specific student_id from violation_history"""
+    if not session.get("user"):
+        return {"error": "Unauthorized"}, 401
+    
+    try:
+        # Get all violations from violation_history
+        violation_history = get_all_from_subcollection("student_violations", "violation_history") or []
+        
+        # Filter violations for this student_id
+        student_violations = []
+        for vh in violation_history:
+            if vh.get('student_id') == student_id:
+                # Get student name from students collection
+                student_name = get_student_name_from_students_collection(student_id)
+                if not student_name:
+                    student_name = vh.get('student_name', vh.get('name', 'Unknown Student'))
+                
+                violation_data = {
+                    'id': vh.get('id', ''),
+                    'parent_doc_id': vh.get('parent_doc_id', ''),
+                    'student_id': student_id,
+                    'student_name': student_name,
+                    'violation_type': vh.get('violation_type', 'Uniform Violation'),
+                    'status': vh.get('status', 'Pending'),
+                    'date': vh.get('date', vh.get('created_at', '')),
+                    'last_updated': vh.get('last_updated', ''),
+                    'missing_items': vh.get('missing_items', []),  # Include missing_items field
+                    'last_missing_items': vh.get('last_missing_items', []),  # Also check last_missing_items
+                    'description': vh.get('description', ''),
+                    'source': 'violation_history'
+                }
+                student_violations.append(violation_data)
+        
+        print(f"[API] GET /api/violations/student/{student_id} returning {len(student_violations)} violations")
+        return {"success": True, "data": student_violations}, 200
+    except Exception as e:
+        print(f"[ERROR] GET /api/violations/student/{student_id} failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return {"error": str(e)}, 500
+
+
+@app.route("/api/uniform-violations-management", methods=["GET"])
+def api_uniform_violations_management():
+    """API endpoint to get uniform violations management data grouped by student"""
+    if not session.get("user"):
+        return {"error": "Unauthorized"}, 401
+    
+    try:
+        # Get violations grouped by student
+        management_data = get_uniform_violations_management_data()
+        print(f"[API] GET /api/uniform-violations-management returning {len(management_data)} students")
+        return {"success": True, "data": management_data}, 200
+    except Exception as e:
+        print(f"[ERROR] GET /api/uniform-violations-management failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return {"error": str(e)}, 500
+
+
 @app.route("/api/violations/student/<student_name>", methods=["DELETE"])
 def api_delete_student_violations(student_name):
     """API endpoint to delete all violations for a specific student from both collections"""
@@ -1089,15 +1421,19 @@ def api_appeals():
     
     if request.method == "GET":
         try:
-            # Get all appeals from Firebase
-            appeals = get_from_firebase("appeals") or []
+            # Get all appeals from student_appeals collection (primary source)
+            student_appeals_list = get_student_appeals_from_firebase()
+            
+            # Get appeals from legacy appeals collection (for backward compatibility)
+            legacy_appeals = get_from_firebase("appeals") or []
+            
             # Get student violations formatted as appeals from student_violations collection
             student_violations_appeals = get_student_violations_as_appeals()
             
-            # Merge both collections
-            all_appeals = appeals + student_violations_appeals
+            # Merge all collections (student_appeals takes priority)
+            all_appeals = student_appeals_list + legacy_appeals + student_violations_appeals
             
-            print(f"[API] GET /api/appeals returning {len(all_appeals)} appeals (from appeals: {len(appeals)}, from student_violations: {len(student_violations_appeals)})")
+            print(f"[API] GET /api/appeals returning {len(all_appeals)} appeals (from student_appeals: {len(student_appeals_list)}, from appeals: {len(legacy_appeals)}, from violation_history: {len(student_violations_appeals)})")
             
             # Debug: Print first few appeals to see their structure
             if all_appeals:
@@ -1107,7 +1443,7 @@ def api_appeals():
             # Migrate existing appeals to include reason_type if missing
             appeals_to_update = []
             
-            for appeal in appeals:  # Only update appeals from the appeals collection
+            for appeal in legacy_appeals:  # Only update appeals from the legacy appeals collection
                 if 'reason_type' not in appeal or not appeal['reason_type']:
                     appeal['reason_type'] = 'Unexcused'
                     if 'id' in appeal:
@@ -1125,6 +1461,9 @@ def api_appeals():
             
             return {"success": True, "data": all_appeals}, 200
         except Exception as e:
+            print(f"[ERROR] GET /api/appeals failed: {e}")
+            import traceback
+            traceback.print_exc()
             return {"error": str(e)}, 500
     
     elif request.method == "POST":
@@ -1137,15 +1476,25 @@ def api_appeals():
             if 'reason_type' not in data or not data['reason_type']:
                 data['reason_type'] = 'Unexcused'
             
-            # Add appeal to Firebase
-            doc_id = add_to_firebase("appeals", data)
+            # Add appeal to student_appeals collection (primary collection)
+            doc_id = add_student_appeal_to_firebase(data)
             if doc_id:
                 # Clear cache to force refresh
                 clear_cache()
                 return {"success": True, "id": doc_id}, 201
             else:
-                return {"error": "Failed to add appeal"}, 500
+                # Fallback to legacy appeals collection if student_appeals fails
+                print("[WARN] Failed to add to student_appeals, trying legacy appeals collection")
+                doc_id = add_to_firebase("appeals", data)
+                if doc_id:
+                    clear_cache()
+                    return {"success": True, "id": doc_id}, 201
+                else:
+                    return {"error": "Failed to add appeal"}, 500
         except Exception as e:
+            print(f"[ERROR] POST /api/appeals failed: {e}")
+            import traceback
+            traceback.print_exc()
             return {"error": str(e)}, 500
 
 
@@ -1168,26 +1517,86 @@ def api_update_appeal(appeal_id):
         appeal = None
         collection_name = None
         
-        # First check in appeals collection
-        appeals = get_from_firebase("appeals") or []
-        appeal = next((a for a in appeals if a.get('id') == appeal_id), None)
-        if appeal:
-            collection_name = "appeals"
-            print(f"[INFO] Appeal {appeal_id} found in appeals collection")
-        else:
-            # Check in student_violations collection
-            student_violations = get_from_firebase("student_violations") or []
-            appeal = next((sv for sv in student_violations if sv.get('id') == appeal_id), None)
+        # First, try to get document directly by document ID (in case appeal_id is the Firebase document ID)
+        if firebase_manager.db:
+            try:
+                # Try student_appeals collection first
+                doc_ref = firebase_manager.db.collection("student_appeals").document(appeal_id)
+                doc = doc_ref.get()
+                if doc.exists:
+                    appeal = doc.to_dict()
+                    appeal['id'] = doc.id
+                    collection_name = "student_appeals"
+                    print(f"[INFO] Appeal {appeal_id} found in student_appeals collection (by document ID)")
+                else:
+                    # Try legacy appeals collection
+                    doc_ref = firebase_manager.db.collection("appeals").document(appeal_id)
+                    doc = doc_ref.get()
+                    if doc.exists:
+                        appeal = doc.to_dict()
+                        appeal['id'] = doc.id
+                        collection_name = "appeals"
+                        print(f"[INFO] Appeal {appeal_id} found in appeals collection (by document ID)")
+            except Exception as e:
+                print(f"[DEBUG] Error getting document by ID: {e}")
+        
+        # If not found by document ID, search by 'id' field in collections
+        if not appeal:
+            # First check in student_appeals collection (primary collection)
+            student_appeals = get_from_firebase("student_appeals") or []
+            appeal = next((a for a in student_appeals if a.get('id') == appeal_id), None)
             if appeal:
-                collection_name = "student_violations"
-                print(f"[INFO] Appeal {appeal_id} found in student_violations collection")
+                collection_name = "student_appeals"
+                print(f"[INFO] Appeal {appeal_id} found in student_appeals collection (by id field)")
+            else:
+                # Check in legacy appeals collection
+                appeals = get_from_firebase("appeals") or []
+                appeal = next((a for a in appeals if a.get('id') == appeal_id), None)
+                if appeal:
+                    collection_name = "appeals"
+                    print(f"[INFO] Appeal {appeal_id} found in appeals collection (by id field)")
+                else:
+                    # Check in student_violations collection
+                    student_violations = get_from_firebase("student_violations") or []
+                    appeal = next((sv for sv in student_violations if sv.get('id') == appeal_id), None)
+                    if appeal:
+                        collection_name = "student_violations"
+                        print(f"[INFO] Appeal {appeal_id} found in student_violations collection (by id field)")
+                    else:
+                        # Check in violation_history subcollection (appeals might be stored there)
+                        try:
+                            violation_history = get_all_from_subcollection("student_violations", "violation_history") or []
+                            appeal = next((vh for vh in violation_history if vh.get('id') == appeal_id), None)
+                            if appeal:
+                                # This is a violation that can be treated as an appeal
+                                collection_name = "student_violations"  # Parent collection
+                                parent_doc_id = appeal.get('parent_doc_id')
+                                print(f"[INFO] Appeal {appeal_id} found in violation_history subcollection (parent: {parent_doc_id})")
+                                # Note: We'll need to update via the parent document and subcollection
+                        except Exception as e:
+                            print(f"[DEBUG] Error checking violation_history: {e}")
         
         if not appeal:
             print(f"[ERROR] Appeal {appeal_id} not found in any collection")
+            print(f"[DEBUG] Searched in: student_appeals, appeals, student_violations")
+            # Try to get a sample of IDs from each collection for debugging
+            try:
+                sample_student_appeals = get_from_firebase("student_appeals", limit=5) or []
+                sample_appeals = get_from_firebase("appeals", limit=5) or []
+                print(f"[DEBUG] Sample student_appeals IDs: {[a.get('id') for a in sample_student_appeals]}")
+                print(f"[DEBUG] Sample appeals IDs: {[a.get('id') for a in sample_appeals]}")
+            except Exception as e:
+                print(f"[DEBUG] Error getting sample IDs: {e}")
             return {"error": f"Appeal {appeal_id} not found"}, 404
         
         # Check if appeal is being approved
         violation_deleted = False
+        if data.get('status') == 'Approved':
+            # Add approval date when appeal is approved
+            from datetime import datetime
+            data['approved_date'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f"[INFO] Appeal {appeal_id} approved on {data['approved_date']}")
+        
         if data.get('status') == 'Approved' and AUTO_DELETE_VIOLATIONS_ON_APPEAL_APPROVAL:
             print(f"[REFRESH] Appeal {appeal_id} is being approved - checking for related violation to delete...")
             try:
@@ -1218,6 +1627,10 @@ def api_update_appeal(appeal_id):
         elif data.get('status') == 'Approved' and not AUTO_DELETE_VIOLATIONS_ON_APPEAL_APPROVAL:
             print(f"[INFO] Appeal {appeal_id} approved but auto-deletion is disabled")
         
+        # Check if appeal is in violation_history subcollection
+        parent_doc_id = appeal.get('parent_doc_id')
+        is_subcollection = parent_doc_id is not None
+        
         # Map status field for student_violations
         if collection_name == "student_violations":
             # For student_violations, use appeal_status field
@@ -1227,7 +1640,25 @@ def api_update_appeal(appeal_id):
             print(f"[INFO] Updating student_violation {appeal_id} with status: {data.get('status')}")
         
         # Update appeal in the correct collection
-        success = update_in_firebase(collection_name, appeal_id, data)
+        if is_subcollection and parent_doc_id:
+            # Update in violation_history subcollection
+            try:
+                if firebase_manager.db:
+                    # Update the subcollection document
+                    doc_ref = firebase_manager.db.collection("student_violations").document(parent_doc_id).collection("violation_history").document(appeal_id)
+                    from datetime import datetime
+                    data['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    doc_ref.update(data)
+                    print(f"[OK] Appeal {appeal_id} updated in violation_history subcollection (parent: {parent_doc_id})")
+                    success = True
+                else:
+                    success = False
+            except Exception as e:
+                print(f"[ERROR] Error updating subcollection document: {e}")
+                success = False
+        else:
+            # Update in regular collection
+            success = update_in_firebase(collection_name, appeal_id, data)
         if success:
             # Clear cache to force refresh
             clear_cache()
@@ -1457,7 +1888,7 @@ def dashboard():
         student_violations_appeals = get_student_violations_as_appeals()
         # Merge both collections for dashboard display
         appeals = appeals + student_violations_appeals
-        print(f"[STATS] Loaded data - Violations: {len(violations)} (includes {len(student_violations)} from student_violations), Appeals: {len(appeals)} (includes {len(student_violations_appeals)} from student_violations)")
+        print(f"[STATS] Loaded data - Violations: {len(violations)} (includes {len(student_violations)} from violation_history), Appeals: {len(appeals)} (includes {len(student_violations_appeals)} from violation_history)")
     except Exception as e:
         print(f"[WARN] Error loading dashboard data: {e}")
         # Fallback to empty data
@@ -1737,7 +2168,7 @@ def violations_page():
         if 'id' not in item:
             item['id'] = f"violation_{i}"  # Fallback ID if not available
     
-    print(f"[INFO] Total violations displayed: {len(items)} (from violations: {len(violations_items)}, from student_violations: {len(student_violations_items)})")
+    print(f"[INFO] Total violations displayed: {len(items)} (from violations: {len(violations_items)}, from violation_history: {len(student_violations_items)})")
     return render_template("violations.html", user=session.get("user"), items=items)
 
 
@@ -1835,27 +2266,35 @@ def appeals_page():
         if not data["student_name"] or not data["student_id"] or not data["violation_id"]:
             flash("Student, ID and Violation ID are required", "error")
         else:
-            doc_id = add_to_firebase("appeals", data)
+            # Add appeal to student_appeals collection (primary collection)
+            doc_id = add_student_appeal_to_firebase(data)
             if doc_id:
                 clear_cache()  # Clear cache when data changes
                 flash(f"Appeal saved (ID: {doc_id})", "success")
             else:
-                flash("Failed to save appeal", "error")
+                # Fallback to legacy appeals collection
+                doc_id = add_to_firebase("appeals", data)
+                if doc_id:
+                    clear_cache()
+                    flash(f"Appeal saved (ID: {doc_id})", "success")
+                else:
+                    flash("Failed to save appeal", "error")
         return redirect(url_for("appeals_page"))
 
-    # Get appeals from both collections
-    appeals_items = get_from_firebase("appeals") or []
+    # Get appeals from all collections
+    student_appeals_items = get_student_appeals_from_firebase()
+    legacy_appeals_items = get_from_firebase("appeals") or []
     student_violations_appeals = get_student_violations_as_appeals()
     
-    # Merge both collections
-    items = appeals_items + student_violations_appeals
+    # Merge all collections (student_appeals takes priority)
+    items = student_appeals_items + legacy_appeals_items + student_violations_appeals
     
     # Add document IDs to items for action buttons
     for i, item in enumerate(items):
         if 'id' not in item:
             item['id'] = f"appeal_{i}"  # Fallback ID if not available
     
-    print(f"[INFO] Total appeals displayed: {len(items)} (from appeals: {len(appeals_items)}, from student_violations: {len(student_violations_appeals)})")
+    print(f"[INFO] Total appeals displayed: {len(items)} (from student_appeals: {len(student_appeals_items)}, from appeals: {len(legacy_appeals_items)}, from violation_history: {len(student_violations_appeals)})")
     return render_template("appeals.html", user=session.get("user"), items=items)
 
 
