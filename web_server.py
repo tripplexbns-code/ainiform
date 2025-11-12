@@ -1330,18 +1330,25 @@ def api_uniform_violations_management():
 
 @app.route("/api/violations/student/<student_name>", methods=["DELETE"])
 def api_delete_student_violations(student_name):
-    """API endpoint to delete all violations for a specific student from both collections"""
+    """API endpoint to delete all violations for a specific student from both collections and violation_history subcollection"""
     if not session.get("user"):
         return {"error": "Unauthorized"}, 401
     
     try:
-        # Get all violations from both collections
+        # Decode and normalize student name
+        from urllib.parse import unquote
+        student_name = unquote(student_name).strip()
+        
+        # Get all violations from all collections and subcollections
         violations = get_from_firebase("violations") or []
         student_violations_list = get_from_firebase("student_violations") or []
+        violation_history = get_all_from_subcollection("student_violations", "violation_history") or []
         
-        # Filter violations for this student from both collections
-        violations_from_collection = [v for v in violations if v.get('student_name') == student_name]
-        violations_from_student_collection = [v for v in student_violations_list if v.get('name') == student_name or v.get('student_name') == student_name]
+        # Filter violations for this student from all sources (case-insensitive matching)
+        violations_from_collection = [v for v in violations if (v.get('student_name') or '').strip() == student_name]
+        violations_from_student_collection = [v for v in student_violations_list if (v.get('name') or '').strip() == student_name or (v.get('student_name') or '').strip() == student_name]
+        # Filter from violation_history subcollection (this is where management table data comes from)
+        violations_from_history = [v for v in violation_history if (v.get('student_name') or '').strip() == student_name or (v.get('name') or '').strip() == student_name]
         
         # Combine all violation IDs to delete
         all_violation_ids = set()
@@ -1351,16 +1358,21 @@ def api_delete_student_violations(student_name):
         for v in violations_from_student_collection:
             if v.get('id'):
                 all_violation_ids.add(v.get('id'))
+        for v in violations_from_history:
+            if v.get('id'):
+                all_violation_ids.add(v.get('id'))
         
         if not all_violation_ids:
             return {"success": True, "deleted_count": 0, "message": "No violations found for this student"}, 200
         
-        # Get student_id from the first violation for cleanup
+        # Get student_id from the first violation for cleanup (check all sources)
         student_id = None
         if violations_from_collection:
             student_id = violations_from_collection[0].get('student_id')
         elif violations_from_student_collection:
             student_id = violations_from_student_collection[0].get('student_id')
+        elif violations_from_history:
+            student_id = violations_from_history[0].get('student_id')
         
         # Delete each violation (this will check both collections automatically)
         deleted_violations = 0
