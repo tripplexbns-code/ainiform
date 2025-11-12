@@ -1589,6 +1589,15 @@ def api_update_appeal(appeal_id):
         
         # Check if appeal is being approved
         violation_deleted = False
+        from datetime import datetime
+        
+        # Add approved_date when appeal is approved
+        if data.get('status') == 'Approved':
+            # Only set approved_date if it's not already set (to preserve original approval date)
+            if 'approved_date' not in data or not data.get('approved_date'):
+                data['approved_date'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                print(f"[INFO] Setting approved_date for appeal {appeal_id}: {data['approved_date']}")
+        
         if data.get('status') == 'Approved' and AUTO_DELETE_VIOLATIONS_ON_APPEAL_APPROVAL:
             print(f"[REFRESH] Appeal {appeal_id} is being approved - checking for related violation to delete...")
             try:
@@ -1638,7 +1647,6 @@ def api_update_appeal(appeal_id):
                 if firebase_manager.db:
                     # Update the subcollection document
                     doc_ref = firebase_manager.db.collection("student_violations").document(parent_doc_id).collection("violation_history").document(appeal_id)
-                    from datetime import datetime
                     data['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     doc_ref.update(data)
                     print(f"[OK] Appeal {appeal_id} updated in violation_history subcollection (parent: {parent_doc_id})")
@@ -1705,39 +1713,65 @@ def api_designs():
             if not name or not typ:
                 return {"error": "Design name and type are required"}, 400
             
-            # Handle image upload
-            image_url = ""
-            file = request.files.get("image")
-            if file and file.filename:
-                try:
-                    suffix = os.path.splitext(file.filename)[1]
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-                        file.save(tmp.name)
-                        tmp_path = tmp.name
-                    
-                    # Upload to Cloudinary
-                    public_id = f"design_{name.replace(' ', '_')}_{int(time.time())}"
-                    image_url = upload_image_to_cloudinary(tmp_path, public_id)
-                    
-                    if not image_url:
-                        print("[WARN] Image upload failed - design will be saved without image")
-                    
-                    # Clean up temporary file
+            # Handle multiple image uploads
+            image_urls = []
+            image_titles = []
+            
+            # Get all images (can be multiple with same name "image")
+            files = request.files.getlist("image")
+            titles = request.form.getlist("image_title")
+            
+            for idx, file in enumerate(files):
+                if file and file.filename:
                     try:
-                        os.unlink(tmp_path)
-                    except Exception:
-                        pass
-                except Exception as e:
-                    print(f"Error uploading image: {e}")
-                    image_url = ""
+                        suffix = os.path.splitext(file.filename)[1]
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                            file.save(tmp.name)
+                            tmp_path = tmp.name
+                        
+                        # Upload to Cloudinary
+                        public_id = f"design_{name.replace(' ', '_')}_{int(time.time())}_{idx}"
+                        image_url = upload_image_to_cloudinary(tmp_path, public_id)
+                        
+                        if image_url:
+                            image_urls.append(image_url)
+                            # Get corresponding title or use default
+                            title = titles[idx] if idx < len(titles) and titles[idx] else f"Image {idx + 1}"
+                            image_titles.append(title)
+                        else:
+                            print(f"[WARN] Image {idx + 1} upload failed")
+                        
+                        # Clean up temporary file
+                        try:
+                            os.unlink(tmp_path)
+                        except Exception:
+                            pass
+                    except Exception as e:
+                        print(f"Error uploading image {idx + 1}: {e}")
+            
+            # For backward compatibility, also set image_url to first image if available
+            image_url = image_urls[0] if image_urls else ""
+            
+            status = request.form.get("status", "Under Review")
+            approved_date = None
+            if status == "Approved":
+                from datetime import datetime
+                approved_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             
             data = {
                 "name": name,
                 "type": typ,
-                "image_url": image_url,
+                "image_url": image_url,  # Keep for backward compatibility
+                "image_urls": image_urls,  # Array of all image URLs
+                "image_titles": image_titles,  # Array of image titles
                 "created_date": time.strftime('%Y-%m-%d'),
-                "status": "Under Review"
+                "status": status,
+                "approved_date": approved_date
             }
+            
+            print(f"[DEBUG] Saving design with {len(image_urls)} images")
+            print(f"[DEBUG] Image URLs: {image_urls}")
+            print(f"[DEBUG] Image Titles: {image_titles}")
             
             # Add design to Firebase
             doc_id = add_to_firebase("uniform_designs", data)
@@ -1819,6 +1853,14 @@ def api_update_design(design_id):
         data = request.get_json()
         if not data:
             return {"error": "No data provided"}, 400
+        
+        # Add approved_date when status is changed to Approved
+        if data.get('status') == 'Approved':
+            from datetime import datetime
+            # Only set approved_date if it's not already set (to preserve original approval date)
+            if 'approved_date' not in data or not data.get('approved_date'):
+                data['approved_date'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                print(f"[INFO] Setting approved_date for design {design_id}: {data['approved_date']}")
         
         # Update design in Firebase
         success = update_design_in_firebase(design_id, data)
@@ -1948,6 +1990,19 @@ def admin_dashboard():
                     # For now, use a fallback ID
                     design['id'] = f"design_{i}"
                     print(f"[WARN] Design at index {i} missing ID, using fallback: {design['id']}")
+        
+        # Sort designs by type: School Uniform first, then House/Casual Shirt
+        def sort_key(design):
+            design_type = (design.get('type') or '').lower().strip()
+            if design_type == 'school uniform':
+                return 0  # School Uniform comes first
+            elif 'house' in design_type or 'casual' in design_type:
+                return 1  # House/Casual Shirt comes second
+            else:
+                return 2  # Other types come last
+        
+        designs = sorted(designs, key=sort_key)
+        print(f"[STATS] Sorted designs by type - School Uniform first, then House/Casual Shirt")
     except Exception as e:
         print(f"[WARN] Error loading admin dashboard data: {e}")
         # Fallback to empty data

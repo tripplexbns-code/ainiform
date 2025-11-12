@@ -505,17 +505,206 @@
             padding: 0;
             border-radius: 10px;
             width: 90%;
-            max-width: 600px;
+            max-width: 900px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             max-height: 85vh;
             overflow-y: auto;
         }
         
+        .form-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        .form-input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .form-upload-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .image-upload-box {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            background: #f8f9fa;
+            transition: border-color 0.3s;
+        }
+        
+        .image-upload-box:hover {
+            border-color: #1877f2;
+        }
+        
+        .image-upload-box input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+        }
+        
+        .image-title-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .image-title-input:focus {
+            outline: none;
+            border-color: #1877f2;
+            box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.1);
+        }
+        
+        .add-image-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.3s;
+            width: 100%;
+        }
+        
+        .add-image-btn:hover {
+            background: #218838;
+        }
+        
+        .remove-image-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 8px;
+            width: 100%;
+        }
+        
+        .remove-image-btn:hover {
+            background: #c82333;
+        }
+        
         #designDetailsModal .modal-content {
-            max-width: 900px;
+            max-width: 1000px;
             border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .design-details-container {
+            padding: 30px;
+            background: #f8f9fa;
+        }
+        
+        .design-header-info {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .design-name-display {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1c1e21;
+            margin-bottom: 10px;
+        }
+        
+        .design-type-display {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .design-images-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .design-images-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1c1e21;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .design-images-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .design-image-card {
+            border: 2px solid #e4e6ea;
+            border-radius: 12px;
+            overflow: hidden;
+            background: white;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .design-image-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .design-image-title {
+            padding: 12px 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 1px solid #e4e6ea;
+            font-weight: 600;
+            font-size: 14px;
+            color: #1c1e21;
+            text-align: center;
+        }
+        
+        .design-image-wrapper-new {
+            width: 100%;
+            height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            padding: 15px;
+        }
+        
+        .design-image-wrapper-new img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        
+        .no-images-message {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 16px;
         }
         
         .design-modal-header {
@@ -942,11 +1131,6 @@
                 <div class="stat-number">{{ stats.approved_designs }}</div>
                 <div class="stat-label">Approved Designs</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon">⏳</div>
-                <div class="stat-number">{{ stats.pending_designs }}</div>
-                <div class="stat-label">Pending Review</div>
-            </div>
         </div>
 
         <!-- Designs Section -->
@@ -967,8 +1151,9 @@
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Design Name</th>
                             <th>Type</th>
+                            <th>Design Name</th>
+                            <th>Date</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -977,21 +1162,35 @@
                         {% for design in designs %}
                         <tr>
                             {% set design_id = design.get('id') if design is mapping else (design.id if design.id else 'unknown') %}
-                            <td><a href="#" class="design-name-link" onclick="viewDesignDetails('{{ design_id }}')">{{ design.name or 'Unknown Design' }}</a></td>
+                            {% set design_status = (design.get('status') or 'Pending')|lower %}
+                            {% if design_status == 'approved' and design.get('approved_date') %}
+                                {% set date_value = design.get('approved_date') %}
+                            {% elif design.get('approved_date') %}
+                                {% set date_value = design.get('approved_date') %}
+                            {% elif design.get('created_date') %}
+                                {% set date_value = design.get('created_date') %}
+                            {% else %}
+                                {% set date_value = '' %}
+                            {% endif %}
+                            {% if date_value %}
+                                {% set date_parts = date_value.split(' ') %}
+                                {% set date_display = date_parts[0] if date_parts else date_value %}
+                            {% else %}
+                                {% set date_display = 'N/A' %}
+                            {% endif %}
                             <td>{{ design.type or 'Unknown Type' }}</td>
+                            <td><a href="#" class="design-name-link" onclick="viewDesignDetails('{{ design_id }}')">{{ design.name or 'Unknown Design' }}</a></td>
+                            <td>{{ date_display }}</td>
                             <td><span class="status-badge status-{{ (design.status or 'Pending').lower().replace(' ', '-') }}">{{ design.status or 'Pending' }}</span></td>
                             <td>
                                 <button class="btn btn-info btn-sm" onclick="viewDesignDetails('{{ design_id }}')" {% if design_id == 'unknown' %}disabled title="Design ID not available"{% endif %}>View</button>
-                                {% if (design.status or 'Pending').lower() != 'approved' %}
-                                <button class="btn btn-success btn-sm" onclick="approveDesign('{{ design_id }}')" {% if design_id == 'unknown' %}disabled title="Design ID not available"{% endif %}>Approve</button>
-                                {% endif %}
                                 <button class="btn btn-danger btn-sm" onclick="deleteDesign('{{ design_id }}')" {% if design_id == 'unknown' %}disabled title="Design ID not available"{% endif %}>Delete</button>
                             </td>
                         </tr>
                         {% endfor %}
                         {% if not designs or designs|length == 0 %}
                         <tr>
-                            <td colspan="4" style="text-align: center; padding: 20px; color: #666;">
+                            <td colspan="5" style="text-align: center; padding: 20px; color: #666;">
                                 <div style="margin-bottom: 10px;">📋 No uniform designs found</div>
                                 <button class="btn btn-primary" onclick="openModal('designModal')">➕ Add First Design</button>
                             </td>
@@ -1011,27 +1210,42 @@
                 <button class="close-btn" onclick="closeModal('designModal')">&times;</button>
             </div>
             <form id="designForm">
-                <div class="form-group">
-                    <label class="form-label">Design Name</label>
-                    <input type="text" class="form-input" name="name" required>
+                <div class="form-layout">
+                    <!-- Left side: Input fields -->
+                    <div class="form-input-section">
+                        <div class="form-group">
+                            <label class="form-label">Design Name</label>
+                            <input type="text" class="form-input" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Type</label>
+                            <select class="form-select" name="type" required>
+                                <option value="">Select Type</option>
+                                <option value="school uniform">School Uniform</option>
+                                <option value="house/casual shirt">House/Casual Shirt</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Right side: Image uploads -->
+                    <div class="form-upload-section">
+                        <div id="imageUploadContainer">
+                            <div class="image-upload-box" data-upload-index="0">
+                                <label class="form-label">Picture Title</label>
+                                <input type="text" class="image-title-input" name="image_titles[]" placeholder="Enter title for this picture (e.g., Front View, Back View)" value="Upload Picture">
+                                <label class="form-label" style="margin-top: 10px;">Upload Picture</label>
+                                <input type="file" class="form-input" name="images[]" accept="image/*" required>
+                                <small class="form-text">Upload a picture of the uniform design (JPG, PNG, GIF)</small>
+                                <!-- First box doesn't have remove button -->
+                            </div>
+                        </div>
+                        <button type="button" class="add-image-btn" onclick="addImageUploadBox()">➕ Add Another Image</button>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Type</label>
-                    <select class="form-select" name="type" required>
-                        <option value="">Select Type</option>
-                        <option value="school uniform">School Uniform</option>
-                        <option value="house shirt">House Shirt</option>
-                        <option value="casual shirt">Casual Shirt</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Upload Picture</label>
-                    <input type="file" class="form-input" name="image" accept="image/*">
-                    <small class="form-text">Upload a picture of the uniform design (JPG, PNG, GIF)</small>
-                </div>
-                <div class="form-group" style="padding: 0 20px 20px 20px;">
+                
+                <div class="form-group" style="padding: 0 20px 20px 20px; margin-top: 20px;">
                     <div class="action-buttons">
-                        <button type="submit" class="btn btn-primary">Save Design</button>
+                        <button type="submit" class="btn btn-primary">Approve</button>
                         <button type="button" class="btn btn-secondary" onclick="closeModal('designModal')">Cancel</button>
                     </div>
                 </div>
@@ -1069,6 +1283,22 @@
 
         function closeModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
+            // Reset form when closing design modal
+            if (modalId === 'designModal') {
+                document.getElementById('designForm').reset();
+                // Reset image upload container to only have one box
+                const container = document.getElementById('imageUploadContainer');
+                container.innerHTML = `
+                    <div class="image-upload-box" data-upload-index="0">
+                        <label class="form-label">Picture Title</label>
+                        <input type="text" class="image-title-input" name="image_titles[]" placeholder="Enter title for this picture (e.g., Front View, Back View)" value="Upload Picture">
+                        <label class="form-label" style="margin-top: 10px;">Upload Picture</label>
+                        <input type="file" class="form-input" name="images[]" accept="image/*" required>
+                        <small class="form-text">Upload a picture of the uniform design (JPG, PNG, GIF)</small>
+                    </div>
+                `;
+                imageUploadIndex = 1;
+            }
         }
 
         // Close modal when clicking outside
@@ -1089,10 +1319,66 @@
             }
         }
 
+        // Add image upload box
+        let imageUploadIndex = 1;
+        function addImageUploadBox() {
+            const container = document.getElementById('imageUploadContainer');
+            const newBox = document.createElement('div');
+            newBox.className = 'image-upload-box';
+            newBox.setAttribute('data-upload-index', imageUploadIndex);
+            newBox.innerHTML = `
+                <label class="form-label">Picture Title</label>
+                <input type="text" class="image-title-input" name="image_titles[]" placeholder="Enter title for this picture (e.g., Front View, Back View)" value="Upload Picture ${imageUploadIndex + 1}">
+                <label class="form-label" style="margin-top: 10px;">Upload Picture</label>
+                <input type="file" class="form-input" name="images[]" accept="image/*">
+                <small class="form-text">Upload a picture of the uniform design (JPG, PNG, GIF)</small>
+                <button type="button" class="remove-image-btn" onclick="removeImageUploadBox(this)">Remove</button>
+            `;
+            container.appendChild(newBox);
+            imageUploadIndex++;
+        }
+        
+        // Remove image upload box
+        function removeImageUploadBox(button) {
+            const box = button.closest('.image-upload-box');
+            const allBoxes = document.querySelectorAll('.image-upload-box');
+            // Don't allow removing if it's the first box or if it's the only box
+            if (box.getAttribute('data-upload-index') === '0') {
+                showAlert('Cannot remove the first image upload box', 'warning');
+                return;
+            }
+            if (allBoxes.length > 1) {
+                box.remove();
+            } else {
+                showAlert('At least one image upload is required', 'warning');
+            }
+        }
+        
         // Design form submission
         document.getElementById('designForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
+            // Set status to Approved when submitting
+            formData.append('status', 'Approved');
+            
+            // Get all image files and their titles
+            const imageInputs = this.querySelectorAll('input[name="images[]"]');
+            const titleInputs = this.querySelectorAll('input[name="image_titles[]"]');
+            let hasImage = false;
+            imageInputs.forEach((input, index) => {
+                if (input.files && input.files[0]) {
+                    formData.append('image', input.files[0]);
+                    // Add corresponding title if available
+                    const title = titleInputs[index] ? (titleInputs[index].value || `Image ${index + 1}`) : `Image ${index + 1}`;
+                    formData.append('image_title', title);
+                    hasImage = true;
+                }
+            });
+            
+            if (!hasImage) {
+                showAlert('Please upload at least one image', 'error');
+                return;
+            }
             
             fetch('/api/designs', {
                 method: 'POST',
@@ -1102,17 +1388,17 @@
             .then(response => response.json())
             .then(result => {
                 if (result.success) {
-                    showAlert('Design added successfully!', 'success');
+                    showAlert('Design approved successfully!', 'success');
                     closeModal('designModal');
                     setTimeout(() => {
                         location.reload();
                     }, 1000);
                 } else {
-                    showAlert('Error adding design: ' + (result.error || 'Unknown error'), 'error');
+                    showAlert('Error approving design: ' + (result.error || 'Unknown error'), 'error');
                 }
             })
             .catch(error => {
-                showAlert('Error adding design: ' + error.message, 'error');
+                showAlert('Error approving design: ' + error.message, 'error');
             });
         });
 
@@ -1211,103 +1497,97 @@
                 if (result.success && result.data) {
                     const design = result.data;
                     
-                    // Build the design details HTML - new modern split-panel design
-                    const statusClass = (design.status || 'Pending').toLowerCase().replace(' ', '-');
-                    const statusBgClass = statusClass === 'approved' ? 'status' : 
-                                         statusClass === 'rejected' ? 'date' : 'status';
+                    // Build the design details HTML - simplified design showing name, type, and images
+                    let imagesHTML = '';
+                    
+                    // Handle multiple images - check for images array or single image_url
+                    let images = [];
+                    console.log('[DEBUG] Design data:', design);
+                    console.log('[DEBUG] image_urls type:', typeof design.image_urls, 'value:', design.image_urls);
+                    console.log('[DEBUG] image_titles type:', typeof design.image_titles, 'value:', design.image_titles);
+                    console.log('[DEBUG] image_url:', design.image_url);
+                    
+                    // Check if image_urls exists and is an array
+                    if (design.image_urls) {
+                        // Handle case where Firebase might return it as an object with numeric keys
+                        let urlArray = [];
+                        if (Array.isArray(design.image_urls)) {
+                            urlArray = design.image_urls;
+                        } else if (typeof design.image_urls === 'object') {
+                            // Convert object to array (Firebase sometimes stores arrays as objects)
+                            urlArray = Object.values(design.image_urls).filter(url => url && typeof url === 'string');
+                        }
+                        
+                        if (urlArray.length > 0) {
+                            // Get titles array
+                            let titleArray = [];
+                            if (design.image_titles) {
+                                if (Array.isArray(design.image_titles)) {
+                                    titleArray = design.image_titles;
+                                } else if (typeof design.image_titles === 'object') {
+                                    titleArray = Object.values(design.image_titles).filter(title => title && typeof title === 'string');
+                                }
+                            }
+                            
+                            images = urlArray.map((url, index) => ({
+                                url: url,
+                                title: titleArray[index] || `Image ${index + 1}`
+                            }));
+                            console.log('[DEBUG] Using image_urls, found', images.length, 'images');
+                        }
+                    }
+                    
+                    // Fallback to other formats if image_urls didn't work
+                    if (images.length === 0) {
+                        if (design.images && Array.isArray(design.images)) {
+                            // If images is an array of objects with url and title
+                            images = design.images;
+                            console.log('[DEBUG] Using images array, found', images.length, 'images');
+                        } else if (design.image_url) {
+                            // Single image (backward compatibility)
+                            images = [{
+                                url: design.image_url,
+                                title: design.image_title || 'Main Image'
+                            }];
+                            console.log('[DEBUG] Using single image_url');
+                        }
+                    }
+                    
+                    console.log('[DEBUG] Final images array:', images);
+                    
+                    if (images.length > 0) {
+                        imagesHTML = '<div class="design-images-grid">';
+                        images.forEach((image, index) => {
+                            const imageUrl = image.url || image;
+                            const imageTitle = image.title || image.image_title || `Image ${index + 1}`;
+                            imagesHTML += `
+                                <div class="design-image-card">
+                                    <div class="design-image-title">${imageTitle}</div>
+                                    <div class="design-image-wrapper-new">
+                                        <img src="${imageUrl}" alt="${imageTitle}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'200\'%3E%3Crect fill=\'%23ddd\' width=\'200\' height=\'200\'/%3E%3Ctext fill=\'%23999\' font-family=\'sans-serif\' font-size=\'14\' dy=\'10.5\' font-weight=\'bold\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\'%3ENo Image%3C/text%3E%3C/svg%3E'">
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        imagesHTML += '</div>';
+                    } else {
+                        imagesHTML = '<div class="no-images-message">📷 No images available for this design</div>';
+                    }
                     
                     let detailsHTML = `
-                        <div class="design-content-wrapper">
-                            <div class="design-main-section">
-                                <div class="design-image-panel">
-                                    <div class="design-image-wrapper">
-                                        ${design.image_url ? `
-                                            <img src="${design.image_url}" alt="${design.name || 'Design'}">
-                                        ` : `
-                                            <div class="design-no-image-box">🎨</div>
-                                        `}
-                                    </div>
-                                </div>
-                                
-                                <div class="design-info-panel">
-                                    <div class="design-title-section">
-                                        <h2 class="design-main-title">${design.name || 'Unknown Design'}</h2>
-                                        <span class="design-type-badge">${design.type || 'Design Type'}</span>
-                                    </div>
-                                    
-                                    <ul class="design-details-list">
-                                        <li class="design-detail-item">
-                                            <div class="design-detail-icon ${statusBgClass}">📊</div>
-                                            <div class="design-detail-content">
-                                                <div class="design-detail-label">Status</div>
-                                                <div class="design-detail-value">
-                                                    <span class="design-status-value">${design.status || 'Pending'}</span>
-                                                </div>
-                                            </div>
-                                        </li>
-                                        
-                                        ${design.course ? `
-                                        <li class="design-detail-item">
-                                            <div class="design-detail-icon course">🎓</div>
-                                            <div class="design-detail-content">
-                                                <div class="design-detail-label">Course</div>
-                                                <div class="design-detail-value">${design.course}</div>
-                                            </div>
-                                        </li>
-                                        ` : ''}
-                                        
-                                        ${design.colors ? `
-                                        <li class="design-detail-item">
-                                            <div class="design-detail-icon colors">🎨</div>
-                                            <div class="design-detail-content">
-                                                <div class="design-detail-label">Colors</div>
-                                                <div class="design-detail-value">${design.colors}</div>
-                                            </div>
-                                        </li>
-                                        ` : ''}
-                                        
-                                        ${design.designer ? `
-                                        <li class="design-detail-item">
-                                            <div class="design-detail-icon designer">👤</div>
-                                            <div class="design-detail-content">
-                                                <div class="design-detail-label">Designer</div>
-                                                <div class="design-detail-value">${design.designer}</div>
-                                            </div>
-                                        </li>
-                                        ` : ''}
-                                        
-                                        ${design.submitted_date ? `
-                                        <li class="design-detail-item">
-                                            <div class="design-detail-icon date">📅</div>
-                                            <div class="design-detail-content">
-                                                <div class="design-detail-label">Submitted Date</div>
-                                                <div class="design-detail-value">${design.submitted_date}</div>
-                                            </div>
-                                        </li>
-                                        ` : ''}
-                                        
-                                        ${design.created_date ? `
-                                        <li class="design-detail-item">
-                                            <div class="design-detail-icon date">⏰</div>
-                                            <div class="design-detail-content">
-                                                <div class="design-detail-label">Created Date</div>
-                                                <div class="design-detail-value">${design.created_date}</div>
-                                            </div>
-                                        </li>
-                                        ` : ''}
-                                    </ul>
-                                </div>
+                        <div class="design-details-container">
+                            <div class="design-header-info">
+                                <div class="design-name-display">${design.name || 'Unknown Design'}</div>
+                                <span class="design-type-display">${design.type || 'Design Type'}</span>
                             </div>
                             
-                            ${design.description ? `
-                            <div class="design-description-box">
-                                <div class="design-description-header">
-                                    <div class="design-description-header-icon">📝</div>
-                                    <h4>Description</h4>
+                            <div class="design-images-section">
+                                <div class="design-images-title">
+                                    <span>🖼️</span>
+                                    <span>Design Images (${images.length})</span>
                                 </div>
-                                <p class="design-description-content">${design.description}</p>
+                                ${imagesHTML}
                             </div>
-                            ` : ''}
                         </div>
                     `;
                     

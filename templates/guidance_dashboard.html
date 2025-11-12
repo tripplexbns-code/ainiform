@@ -663,7 +663,7 @@
         
         .data-table {
             width: 100%;
-            min-width: 900px;
+            min-width: 800px;
             border-collapse: collapse;
             background: white;
             border-radius: 12px;
@@ -674,52 +674,58 @@
         
         .data-table th {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 16px 12px;
+            padding: 10px 8px;
             text-align: left;
             font-weight: 700;
             color: #1c1e21;
             border-bottom: 2px solid #e4e6ea;
             white-space: nowrap;
-            font-size: 13px;
+            font-size: 12px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
         }
         
         .data-table td {
-            padding: 16px 12px;
+            padding: 10px 8px;
             border-bottom: 1px solid #f0f2f5;
             word-wrap: break-word;
             vertical-align: middle;
+            font-size: 13px;
         }
         
         /* Column width specifications */
         .data-table th:nth-child(1),
         .data-table td:nth-child(1) {
-            width: 20%; /* Student */
+            width: 18%; /* Student */
         }
         
         .data-table th:nth-child(2),
         .data-table td:nth-child(2) {
-            width: 15%; /* Student ID */
+            width: 12%; /* Student ID */
         }
         
         .data-table th:nth-child(3),
         .data-table td:nth-child(3) {
-            width: 18%; /* Violation */
+            width: 15%; /* Violation */
         }
         
         .data-table th:nth-child(4),
         .data-table td:nth-child(4) {
-            width: 12%; /* Status */
+            width: 10%; /* Date */
         }
         
         .data-table th:nth-child(5),
         .data-table td:nth-child(5) {
-            width: 8%; /* Offense */
+            width: 10%; /* Status */
         }
         
         .data-table th:nth-child(6),
         .data-table td:nth-child(6) {
+            width: 8%; /* Offense */
+        }
+        
+        .data-table th:nth-child(7),
+        .data-table td:nth-child(7) {
             width: 27%; /* Actions */
             white-space: nowrap;
         }
@@ -727,12 +733,12 @@
         /* Specific styling for violations table */
         #violations .data-table th:nth-child(1),
         #violations .data-table td:nth-child(1) {
-            width: 20%; /* Student */
+            width: 18%; /* Student */
         }
         
         #violations .data-table th:nth-child(2),
         #violations .data-table td:nth-child(2) {
-            width: 15%; /* Student ID */
+            width: 12%; /* Student ID */
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -740,22 +746,29 @@
         
         #violations .data-table th:nth-child(3),
         #violations .data-table td:nth-child(3) {
-            width: 18%; /* Violation */
+            width: 15%; /* Violation */
         }
         
         #violations .data-table th:nth-child(4),
         #violations .data-table td:nth-child(4) {
-            width: 12%; /* Status */
+            width: 10%; /* Date */
+            white-space: nowrap;
+            font-size: 12px;
         }
         
         #violations .data-table th:nth-child(5),
         #violations .data-table td:nth-child(5) {
-            width: 8%; /* Offense - compact for ordinal numbers */
-            text-align: center;
+            width: 10%; /* Status */
         }
         
         #violations .data-table th:nth-child(6),
         #violations .data-table td:nth-child(6) {
+            width: 8%; /* Offense - compact for ordinal numbers */
+            text-align: center;
+        }
+        
+        #violations .data-table th:nth-child(7),
+        #violations .data-table td:nth-child(7) {
             width: 27%; /* Actions - increased space for buttons */
             white-space: nowrap;
             text-align: center;
@@ -885,22 +898,29 @@
             visibility: visible !important;
         }
         
-        .data-table td:nth-child(6) {
+        .data-table td:nth-child(7) {
             text-align: center;
         }
         
-        .data-table td:nth-child(6) .btn {
-            margin: 3px;
-            padding: 8px 14px;
+        .data-table td:nth-child(7) .btn {
+            margin: 2px;
+            padding: 6px 12px;
             font-size: 12px;
         }
         
         /* Specific button styling for violations table */
-        #violations .data-table td:nth-child(6) .btn {
-            margin: 3px;
-            padding: 8px 14px;
+        #violations .data-table td:nth-child(7) .btn {
+            margin: 2px;
+            padding: 6px 12px;
             font-size: 12px;
-            min-width: 70px;
+            min-width: 65px;
+        }
+        
+        /* Compact button styling for violations table */
+        #violations .data-table td:nth-child(7) .btn.btn-sm {
+            padding: 5px 10px;
+            font-size: 11px;
+            min-width: 60px;
         }
         
         .data-table tr {
@@ -1269,15 +1289,21 @@
         }
         
         .status-badge {
-            padding: 6px 14px;
-            border-radius: 20px;
+            padding: 5px 12px;
+            border-radius: 15px;
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
             display: inline-block;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        /* Compact status badges for violations table */
+        #violations .status-badge {
+            padding: 4px 10px;
+            font-size: 10px;
         }
         
         .status-badge:hover {
@@ -1425,11 +1451,11 @@
         
         .violation-count-badge {
             display: inline-block;
-            padding: 8px 12px;
-            border-radius: 15px;
+            padding: 5px 10px;
+            border-radius: 12px;
             font-weight: bold;
-            font-size: 14px;
-            min-width: 35px;
+            font-size: 12px;
+            min-width: 32px;
             text-align: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
@@ -1437,10 +1463,21 @@
         .violation-count-badge.max-violations {
             background: linear-gradient(135deg, #d32f2f, #b71c1c);
             color: white;
-            font-size: 16px;
+            font-size: 13px;
             font-weight: 900;
-            box-shadow: 0 4px 8px rgba(211, 47, 47, 0.3);
+            box-shadow: 0 3px 6px rgba(211, 47, 47, 0.3);
             animation: pulse 2s infinite;
+        }
+        
+        /* Compact count badges for violations table */
+        #violations .violation-count-badge {
+            padding: 4px 8px;
+            font-size: 11px;
+            min-width: 28px;
+        }
+        
+        #violations .violation-count-badge.max-violations {
+            font-size: 12px;
         }
         
         .violation-count-badge.warning-violations {
@@ -2433,10 +2470,6 @@
                     <div id="violations" class="tab-content active">
         <div class="section-header">
             <h3 class="section-title" data-translate="violations-management">Uniform Violations Management</h3>
-            <div class="action-buttons">
-                <button class="btn btn-primary" onclick="openModal('violationModal')" data-translate="add-violation">➕ Add Violation</button>
-                <button class="btn btn-danger" onclick="clearAllViolations()" data-translate="clear-all">🗑️ Clear All</button>
-            </div>
         </div>
         
                         
@@ -2453,6 +2486,7 @@
                                         <th data-translate="student">Student</th>
                                         <th data-translate="student-id">Student ID</th>
                                         <th data-translate="violation">Violation</th>
+                                        <th data-translate="date">Date</th>
                                         <th data-translate="status">Status</th>
                                         <th data-translate="offense">Offense</th>
                                         <th data-translate="actions">Actions</th>
@@ -2475,7 +2509,7 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <button class="btn btn-danger" onclick="deleteViolation('{{ violation.id or 'unknown' }}')" data-translate="delete">Delete</button>
+                                            <button class="btn btn-success" onclick="completeViolation('{{ violation.student_name or 'Unknown' }}')" data-translate="complete">Complete</button>
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -2489,9 +2523,6 @@
                     <div id="appeals" class="tab-content">
                         <div class="section-header">
                             <h3 class="section-title">Appeals Management</h3>
-                            <div class="action-buttons">
-                                <button class="btn btn-primary" onclick="openModal('appealModal')">➕ Add Appeal</button>
-                            </div>
                         </div>
                         
                         <div class="search-bar">
@@ -4041,6 +4072,58 @@
             }
         }
 
+        function completeViolation(studentName) {
+            if (confirm(`Are you sure you want to complete all violations for ${studentName}?\n\nThis will clear all violations for this student.`)) {
+                // Show loading indicator
+                showLoading();
+                
+                // Call the API to delete all violations for this student
+                fetch(`/api/violations/student/${encodeURIComponent(studentName)}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    hideLoading();
+                    
+                    if (result.success) {
+                        const deletedViolations = result.deleted_violations || 0;
+                        
+                        if (deletedViolations > 0) {
+                            showAlert(`✅ Successfully completed all violations for ${studentName}! (${deletedViolations} violation(s) cleared)`, 'success');
+                            
+                            // Log the activity
+                            logActivity('complete', 'violation', 'Student Violations Completed', 
+                                `All violations completed for student: ${studentName}`, 
+                                `Student: ${studentName}, Violations cleared: ${deletedViolations}, Completed by: ${getCurrentUser()}`);
+                            
+                            // Refresh the table immediately
+                            refreshDataOnly();
+                            
+                            // Also refresh activity log if it's currently active
+                            const activityTab = document.getElementById('activity');
+                            if (activityTab && activityTab.classList.contains('active')) {
+                                setTimeout(() => {
+                                    loadActivityLog();
+                                }, 500);
+                            }
+                        } else {
+                            showAlert(`ℹ️ No violations found for ${studentName}`, 'info');
+                        }
+                    } else {
+                        showAlert(`❌ Error completing violations: ${result.error || 'Unknown error'}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    hideLoading();
+                    showAlert(`❌ Error completing violations: ${error.message}`, 'error');
+                    console.error('Complete violations error:', error);
+                });
+            }
+        }
+
         function clearAllViolations() {
             if (confirm('⚠️ WARNING: This will delete ALL violations permanently!\n\nAre you absolutely sure you want to continue?')) {
                 if (confirm('This action cannot be undone. Type "DELETE ALL" to confirm:')) {
@@ -4629,8 +4712,8 @@
                 });
             }
             
-            // Fetch fresh uniform violations management data with cache busting
-            fetch('/api/uniform-violations-management?t=' + Date.now(), {
+            // Fetch fresh violations data with cache busting
+            fetch('/api/violations?t=' + Date.now(), {
                 credentials: 'same-origin',
                 cache: 'no-cache'
             })
@@ -4642,30 +4725,17 @@
                 })
                 .then(result => {
                     if (result.success && result.data) {
-                        console.log('Fresh uniform violations management data:', result.data);
-                        console.log('Updating violations table with', result.data.length, 'students');
-                        // Update the violations table with grouped data
-                        updateUniformViolationsTable(result.data);
+                        console.log('Fresh violations data:', result.data);
+                        console.log('Updating violations table with', result.data.length, 'violations');
+                        // Update the violations table with grouped violations (one row per student)
+                        buildGroupedViolationsTable(result.data);
                         // Reapply search filter after table update
                         setTimeout(() => reapplyViolationSearch(), 100);
-                    } else {
-                        // Fallback to old API if new one fails
-                        fetch('/api/violations?t=' + Date.now(), {
-                            credentials: 'same-origin',
-                            cache: 'no-cache'
-                        })
-                        .then(response => response.json())
-                        .then(fallbackResult => {
-                            if (fallbackResult.success && fallbackResult.data) {
-                                updateViolationsTable(fallbackResult.data);
-                                calculateViolationCounts();
-                                groupViolationRows();
-                            } else if (Array.isArray(fallbackResult)) {
-                                updateViolationsTable(fallbackResult);
-                                calculateViolationCounts();
-                                groupViolationRows();
-                            }
-                        });
+                    } else if (Array.isArray(result)) {
+                        console.log('Fresh violations data (array):', result);
+                        buildGroupedViolationsTable(result);
+                        // Reapply search filter after table update
+                        setTimeout(() => reapplyViolationSearch(), 100);
                     }
                 })
                 .catch(error => {
@@ -4678,13 +4748,9 @@
                     .then(response => response.json())
                     .then(fallbackResult => {
                         if (fallbackResult.success && fallbackResult.data) {
-                            updateViolationsTable(fallbackResult.data);
-                            calculateViolationCounts();
-                            groupViolationRows();
+                            buildGroupedViolationsTable(fallbackResult.data);
                         } else if (Array.isArray(fallbackResult)) {
-                            updateViolationsTable(fallbackResult);
-                            calculateViolationCounts();
-                            groupViolationRows();
+                            buildGroupedViolationsTable(fallbackResult);
                         }
                     })
                     .catch(fallbackError => {
@@ -4752,6 +4818,18 @@
                 
                 const statusClass = studentData.status.toLowerCase().replace(/\s+/g, '-');
                 
+                // Calculate latest date from studentData
+                let latestDate = 'No Date';
+                if (studentData.latest_date || studentData.last_updated || studentData.date) {
+                    const dateValue = studentData.latest_date || studentData.last_updated || studentData.date;
+                    const dateObj = new Date(dateValue);
+                    if (!isNaN(dateObj.getTime())) {
+                        latestDate = (dateObj.getMonth() + 1).toString().padStart(2, '0') + '/' + 
+                                    dateObj.getDate().toString().padStart(2, '0') + '/' + 
+                                    dateObj.getFullYear();
+                    }
+                }
+                
                 row.innerHTML = `
                     <td class="student-name-cell">
                         ${studentData.student_name || 'Unknown Student'}
@@ -4760,13 +4838,14 @@
                         ${studentData.student_id || 'No ID'}
                     </td>
                     <td>${studentData.violation_type || 'Incomplete Uniform'}</td>
+                    <td>${latestDate}</td>
                     <td><span class="status-badge status-${statusClass}">${studentData.status || 'Warning'}</span></td>
                     <td class="count-cell">
                         <span class="violation-count-badge">${studentData.offense_count || 0}</span>
                     </td>
                     <td>
                         <button class="btn btn-primary btn-sm" onclick="viewStudentViolationsByStudentId('${studentData.student_id}')">View</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteAllStudentViolations('${studentData.student_name}')">Delete</button>
+                        <button class="btn btn-success btn-sm" onclick="completeViolation('${studentData.student_name}')">Complete</button>
                     </td>
                 `;
                 
@@ -4829,12 +4908,10 @@
                     <td>${violation.violation_type || 'Incomplete Uniform'}</td>
                     <td><span class="status-badge status-${statusClass}">${status}</span></td>
                     <td class="count-cell">
-                        <span class="violation-count-badge">
-                            <!-- Offense will be populated by JavaScript -->
-                        </span>
+                        <span class="violation-count-badge ${getCountClass(studentCount)}">${getCountText(studentCount)}</span>
                     </td>
                     <td>
-                        <button class="btn btn-danger" onclick="deleteViolation('${violation.id}')">Delete</button>
+                        <button class="btn btn-success" onclick="completeViolation('${violation.student_name}')">Complete</button>
                     </td>
                 `;
                 
@@ -4902,29 +4979,42 @@
         }
 
         function calculateViolationCounts() {
-            // First try to get fresh data from API
-            fetch('/api/violations', {
-                credentials: 'same-origin'
-            })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success && result.data) {
-                        console.log('Fresh violations data:', result.data);
-                        buildGroupedViolationsTable(result.data);
-                        // Reapply search filter after building table
-                        setTimeout(() => reapplyViolationSearch(), 100);
-                    } else {
-                        // Fallback to grouping existing rows
-                        groupViolationRows();
-                        // Reapply search filter after grouping
-                        setTimeout(() => reapplyViolationSearch(), 100);
+            // Calculate and populate violation count badges without transforming the table structure
+            const tableBody = document.getElementById('violationsTableBody');
+            if (!tableBody) {
+                console.log('Violations table body not found for count calculation');
+                return;
+            }
+
+            const rows = Array.from(tableBody.querySelectorAll('.violation-row'));
+            if (rows.length === 0) {
+                console.log('No violation rows found for count calculation');
+                return;
+            }
+
+            // Count violations per student
+            const studentViolationCounts = {};
+            rows.forEach(row => {
+                const studentName = row.dataset.student || row.querySelector('.student-name-cell')?.textContent?.trim();
+                if (studentName) {
+                    studentViolationCounts[studentName] = (studentViolationCounts[studentName] || 0) + 1;
+                }
+            });
+
+            // Populate count badges for each row
+            rows.forEach(row => {
+                const studentName = row.dataset.student || row.querySelector('.student-name-cell')?.textContent?.trim();
+                if (studentName) {
+                    const count = studentViolationCounts[studentName] || 1;
+                    const countBadge = row.querySelector('.violation-count-badge');
+                    if (countBadge) {
+                        countBadge.textContent = getCountText(count);
+                        countBadge.className = `violation-count-badge ${getCountClass(count)}`;
                     }
-                })
-                .catch(error => {
-                    console.error('Error fetching fresh violations:', error);
-                    // Fallback to grouping existing rows
-                    groupViolationRows();
-                });
+                }
+            });
+
+            console.log('Calculated violation counts for', Object.keys(studentViolationCounts).length, 'students');
         }
 
         function groupViolationRows() {
@@ -4975,19 +5065,33 @@
                 const studentRow = document.createElement('tr');
                 studentRow.className = `student-row ${getRowClass(count)}`;
                 
+                // Try to get date from data attributes or cells
+                let latestDate = 'No Date';
+                // Check if we can get date from the latest violation row's data attributes
+                const latestRowData = latestViolation.dataset;
+                if (latestRowData && latestRowData.date) {
+                    const dateObj = new Date(latestRowData.date);
+                    if (!isNaN(dateObj.getTime())) {
+                        latestDate = (dateObj.getMonth() + 1).toString().padStart(2, '0') + '/' + 
+                                    dateObj.getDate().toString().padStart(2, '0') + '/' + 
+                                    dateObj.getFullYear();
+                    }
+                }
+                
                 studentRow.innerHTML = `
                     <td class="student-name-cell">
                         <strong>${studentName}</strong>
                     </td>
                     <td class="student-id-cell">${latestCells[1]?.textContent?.trim() || 'No ID'}</td>
                     <td>${latestCells[2]?.textContent?.trim() || 'Multiple Types'}</td>
+                    <td>${latestDate}</td>
                     <td>${latestCells[3]?.innerHTML || '<span class="status-badge status-active">Active</span>'}</td>
                     <td class="count-cell">
                         <span class="violation-count-badge ${getCountClass(count)}">${getCountText(count)}</span>
                     </td>
                     <td>
                         <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); viewStudentViolations('${studentName}')">View</button>
-                        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); deleteAllStudentViolations('${studentName}')">Delete</button>
+                        <button class="btn btn-success btn-sm" onclick="event.stopPropagation(); completeViolation('${studentName}')">Complete</button>
                     </td>
                 `;
                 
@@ -5042,6 +5146,28 @@
                 // Get latest violation for summary
                 const latestViolation = studentViolations[studentViolations.length - 1];
                 
+                // Calculate latest violation date for this student
+                let latestDate = 'No Date';
+                const dates = studentViolations.map(v => {
+                    return v.last_updated || v.date || v.created_at || v.timestamp || null;
+                }).filter(d => d !== null);
+                
+                if (dates.length > 0) {
+                    // Sort dates to get the latest one
+                    dates.sort((a, b) => {
+                        const dateA = new Date(a);
+                        const dateB = new Date(b);
+                        return dateB - dateA; // Descending order
+                    });
+                    const latestDateObj = new Date(dates[0]);
+                    if (!isNaN(latestDateObj.getTime())) {
+                        // Format as MM/DD/YYYY
+                        latestDate = (latestDateObj.getMonth() + 1).toString().padStart(2, '0') + '/' + 
+                                    latestDateObj.getDate().toString().padStart(2, '0') + '/' + 
+                                    latestDateObj.getFullYear();
+                    }
+                }
+                
                 // Calculate status based on violation count
                 const status = getViolationStatus(count);
                 const statusClass = status.toLowerCase().replace(/\s+/g, '-');
@@ -5052,13 +5178,14 @@
                     </td>
                     <td class="student-id-cell">${latestViolation.student_id || 'No ID'}</td>
                     <td>${latestViolation.violation_type || 'Multiple'}</td>
+                    <td>${latestDate}</td>
                     <td><span class="status-badge status-${statusClass}">${status}</span></td>
                     <td class="count-cell">
                         <span class="violation-count-badge ${getCountClass(count)}">${getCountText(count)}</span>
                     </td>
                     <td>
                         <button class="btn btn-primary btn-sm" onclick="viewStudentViolations('${studentName}')">View</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteAllStudentViolations('${studentName}')">Delete</button>
+                        <button class="btn btn-success btn-sm" onclick="completeViolation('${studentName}')">Complete</button>
                     </td>
                 `;
                 
@@ -5071,7 +5198,7 @@
                 
                 const detailsCell = document.createElement('td');
                 detailsCell.className = 'violation-details-cell';
-                detailsCell.colSpan = 7;
+                detailsCell.colSpan = 8;
                 
                 let detailsHtml = '<div style="margin-bottom: 10px;"><strong>All Violations for ' + studentName + ':</strong></div>';
                 studentViolations.forEach((violation, index) => {
@@ -6124,36 +6251,34 @@
                 calculateViolationCounts();
             });
             
-            // Load uniform violations management data on page load
-            fetch('/api/uniform-violations-management', {
+            // Load violations data on page load and group by student
+            fetch('/api/violations', {
                 credentials: 'same-origin',
                 cache: 'no-cache'
             })
             .then(response => response.json())
             .then(result => {
                 if (result.success && result.data) {
-                    console.log('Loaded uniform violations management data on page load:', result.data);
-                    updateUniformViolationsTable(result.data);
+                    console.log('Loaded violations data on page load:', result.data);
+                    // Group violations by student (one row per student)
+                    buildGroupedViolationsTable(result.data);
+                } else if (Array.isArray(result)) {
+                    console.log('Loaded violations data (array) on page load:', result);
+                    buildGroupedViolationsTable(result);
                 } else {
-                    // Fallback to server-side data
-                    const serverViolations = window.violationsData || [];
-                    if (serverViolations.length > 0) {
-                        console.log('Using server-side violations data:', serverViolations);
-                        buildGroupedViolationsTable(serverViolations);
-                    } else {
-                        calculateViolationCounts();
+                    // Fallback: group existing server-side rendered violations
+                    const tableBody = document.getElementById('violationsTableBody');
+                    if (tableBody && tableBody.children.length > 0) {
+                        groupViolationRows();
                     }
                 }
             })
             .catch(error => {
-                console.error('Error loading uniform violations management data:', error);
-                // Fallback to server-side data
-                const serverViolations = window.violationsData || [];
-                if (serverViolations.length > 0) {
-                    console.log('Using server-side violations data:', serverViolations);
-                    buildGroupedViolationsTable(serverViolations);
-                } else {
-                    calculateViolationCounts();
+                console.error('Error loading violations data:', error);
+                // Fallback: group existing server-side rendered violations
+                const tableBody = document.getElementById('violationsTableBody');
+                if (tableBody && tableBody.children.length > 0) {
+                    groupViolationRows();
                 }
             });
             
