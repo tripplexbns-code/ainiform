@@ -243,6 +243,7 @@ def get_student_violations_as_appeals():
                 'appeal_reason': vh.get('appeal_reason', vh.get('reason', vh.get('description', 'Appeal for violation'))),
                 'reason': vh.get('appeal_reason', vh.get('reason', vh.get('description', 'Appeal for violation'))),
                 'status': vh.get('appeal_status', vh.get('status', 'Pending Review')),
+                'approved_date': vh.get('approved_date', ''),  # Date when appeal was approved
                 'submitted_by': vh.get('submitted_by', vh.get('student_name', vh.get('name', 'Student'))),
                 'priority': vh.get('priority', 'Medium'),
                 'reason_type': vh.get('reason_type', 'Unexcused'),
@@ -659,6 +660,7 @@ def get_student_appeals_from_firebase():
                 'appeal_reason': appeal.get('appeal_reason', appeal.get('reason', '')),
                 'reason': appeal.get('appeal_reason', appeal.get('reason', '')),
                 'status': appeal.get('status', 'Pending Review'),
+                'approved_date': appeal.get('approved_date', ''),  # Date when appeal was approved
                 'submitted_by': appeal.get('submitted_by', appeal.get('student_name', 'Student')),
                 'priority': appeal.get('priority', 'Medium'),
                 'reason_type': appeal.get('reason_type', 'Unexcused'),
@@ -705,6 +707,13 @@ def add_student_appeal_to_firebase(data):
         from datetime import datetime
         data['created_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         data['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        # Set approved_date only if status is Approved
+        if data.get('status') == 'Approved' and ('approved_date' not in data or not data.get('approved_date')):
+            data['approved_date'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        elif data.get('status') != 'Approved':
+            # Clear approved_date if status is not Approved
+            data['approved_date'] = ''
         
         # Add appeal to student_appeals collection
         doc_id = add_to_firebase("student_appeals", data)
@@ -1591,12 +1600,19 @@ def api_update_appeal(appeal_id):
         violation_deleted = False
         from datetime import datetime
         
-        # Add approved_date when appeal is approved
-        if data.get('status') == 'Approved':
+        # Handle approved_date based on status changes
+        current_status = appeal.get('status', 'Pending Review')
+        new_status = data.get('status')
+        
+        if new_status == 'Approved':
             # Only set approved_date if it's not already set (to preserve original approval date)
             if 'approved_date' not in data or not data.get('approved_date'):
                 data['approved_date'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 print(f"[INFO] Setting approved_date for appeal {appeal_id}: {data['approved_date']}")
+        elif current_status == 'Approved' and new_status != 'Approved':
+            # Clear approved_date if status changes from Approved to something else
+            data['approved_date'] = ''
+            print(f"[INFO] Clearing approved_date for appeal {appeal_id} (status changed from Approved to {new_status})")
         
         if data.get('status') == 'Approved' and AUTO_DELETE_VIOLATIONS_ON_APPEAL_APPROVAL:
             print(f"[REFRESH] Appeal {appeal_id} is being approved - checking for related violation to delete...")

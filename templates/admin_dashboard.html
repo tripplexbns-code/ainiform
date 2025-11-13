@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Uniform System - Admin Dashboard</title>
     <meta name="description" content="Admin Dashboard - Manage uniform designs efficiently">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -103,16 +103,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 12px;
-            padding: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            transition: box-shadow 0.2s;
-        }
-        
-        .header-logo-container:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
         
         .header-logo {
@@ -644,6 +634,41 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
         
+        .design-images-grid-wrapper {
+            max-height: 500px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 5px;
+            padding-bottom: 80px;
+            padding-top: 5px;
+            box-sizing: border-box;
+        }
+        
+        /* Custom scrollbar styling for design images grid wrapper */
+        .design-images-grid-wrapper::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        .design-images-grid-wrapper::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .design-images-grid-wrapper::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        
+        .design-images-grid-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        /* Firefox scrollbar styling */
+        .design-images-grid-wrapper {
+            scrollbar-width: thin;
+            scrollbar-color: #888 #f1f1f1;
+        }
+        
         .design-images-title {
             font-size: 20px;
             font-weight: 700;
@@ -658,6 +683,8 @@
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 20px;
+            padding-bottom: 30px;
+            padding-top: 10px;
         }
         
         .design-image-card {
@@ -685,19 +712,23 @@
         
         .design-image-wrapper-new {
             width: 100%;
-            height: 250px;
+            min-height: 250px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: #f8f9fa;
             padding: 15px;
+            box-sizing: border-box;
         }
         
         .design-image-wrapper-new img {
-            max-width: 100%;
-            max-height: 100%;
+            max-width: calc(100% - 30px);
+            max-height: calc(100% - 30px);
+            width: auto;
+            height: auto;
             object-fit: contain;
             border-radius: 8px;
+            display: block;
         }
         
         .no-images-message {
@@ -1556,7 +1587,7 @@
                     console.log('[DEBUG] Final images array:', images);
                     
                     if (images.length > 0) {
-                        imagesHTML = '<div class="design-images-grid">';
+                        imagesHTML = '<div class="design-images-grid-wrapper"><div class="design-images-grid">';
                         images.forEach((image, index) => {
                             const imageUrl = image.url || image;
                             const imageTitle = image.title || image.image_title || `Image ${index + 1}`;
@@ -1569,7 +1600,7 @@
                                 </div>
                             `;
                         });
-                        imagesHTML += '</div>';
+                        imagesHTML += '</div></div>';
                     } else {
                         imagesHTML = '<div class="no-images-message">📷 No images available for this design</div>';
                     }
