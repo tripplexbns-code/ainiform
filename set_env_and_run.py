@@ -13,13 +13,13 @@ def set_environment_variables():
     print("[SETUP] Setting up environment variables...")
     
     # Set Firebase Storage bucket
-    os.environ['FIREBASE_STORAGE_BUCKET'] = 'ainiform-system-c42de.appspot.com'
-    print("[OK] FIREBASE_STORAGE_BUCKET set to: ainiform-system-c42de.appspot.com")
+    os.environ['FIREBASE_STORAGE_BUCKET'] = 'ainiform-45224.appspot.com'
+    print("[OK] FIREBASE_STORAGE_BUCKET set to: ainiform-45224.appspot.com")
     
     # Set other optional variables if not already set
     if not os.environ.get('FIREBASE_PROJECT_ID'):
-        os.environ['FIREBASE_PROJECT_ID'] = 'ainiform-system-c42de'
-        print("[OK] FIREBASE_PROJECT_ID set to: ainiform-system-c42de")
+        os.environ['FIREBASE_PROJECT_ID'] = 'ainiform-45224'
+        print("[OK] FIREBASE_PROJECT_ID set to: ainiform-45224")
     
     # Set Flask secret key if not set
     if not os.environ.get('SECRET_KEY'):

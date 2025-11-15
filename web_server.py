@@ -1908,6 +1908,146 @@ def api_delete_design(design_id):
         return {"error": str(e)}, 500
 
 
+@app.route("/api/students", methods=["GET", "POST"])
+def api_students():
+    """API endpoint to get all students or add a new student"""
+    if not session.get("user"):
+        return {"error": "Unauthorized"}, 401
+    
+    if request.method == "GET":
+        try:
+            # Get all students from Firebase
+            students = get_cached_data("student_list", 100)
+            return {"success": True, "data": students}, 200
+        except Exception as e:
+            print(f"[ERROR] Error fetching students: {e}")
+            return {"error": str(e)}, 500
+    
+    elif request.method == "POST":
+        try:
+            data = request.get_json()
+            
+            # Validate required fields
+            required_fields = ['name', 'student_number', 'course', 'gender', 'email', 'contact_number']
+            for field in required_fields:
+                if not data.get(field):
+                    return {"error": f"{field.replace('_', ' ').title()} is required"}, 400
+            
+            # Prepare student data
+            student_data = {
+                'name': data.get('name', '').strip(),
+                'student_number': data.get('student_number', '').strip(),
+                'course': data.get('course', '').strip(),
+                'gender': data.get('gender', '').strip(),
+                'email': data.get('email', '').strip(),
+                'contact_number': data.get('contact_number', '').strip(),
+                'parent_phone': data.get('parent_phone', '').strip() if data.get('parent_phone') else '',
+                'parent_email': data.get('parent_email', '').strip() if data.get('parent_email') else ''
+            }
+            
+            # Add timestamp
+            from datetime import datetime
+            student_data['created_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            student_data['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            
+            # Add to Firebase
+            doc_id = add_to_firebase("student_list", student_data)
+            if doc_id:
+                # Clear cache to force refresh
+                clear_cache()
+                student_data['id'] = doc_id
+                return {"success": True, "data": student_data}, 201
+            else:
+                return {"error": "Failed to add student to database"}, 500
+        except Exception as e:
+            print(f"[ERROR] Error adding student: {e}")
+            import traceback
+            traceback.print_exc()
+            return {"error": str(e)}, 500
+
+
+@app.route("/api/students/<student_id>", methods=["GET", "PUT", "DELETE"])
+def api_student(student_id):
+    """API endpoint to get, update, or delete a specific student"""
+    if not session.get("user"):
+        return {"error": "Unauthorized"}, 401
+    
+    if request.method == "GET":
+        try:
+            # Get student from Firebase by document ID
+            if firebase_manager.db:
+                doc_ref = firebase_manager.db.collection("student_list").document(student_id)
+                doc = doc_ref.get()
+                if doc.exists:
+                    student = doc.to_dict()
+                    student['id'] = doc.id
+                    return {"success": True, "data": student}, 200
+                else:
+                    return {"error": "Student not found"}, 404
+            else:
+                return {"error": "Firebase not initialized"}, 500
+        except Exception as e:
+            print(f"[ERROR] Error fetching student: {e}")
+            import traceback
+            traceback.print_exc()
+            return {"error": str(e)}, 500
+    
+    elif request.method == "PUT":
+        try:
+            data = request.get_json()
+            
+            # Validate required fields
+            required_fields = ['name', 'student_number', 'course', 'gender', 'email', 'contact_number']
+            for field in required_fields:
+                if not data.get(field):
+                    return {"error": f"{field.replace('_', ' ').title()} is required"}, 400
+            
+            # Prepare student data
+            student_data = {
+                'name': data.get('name', '').strip(),
+                'student_number': data.get('student_number', '').strip(),
+                'course': data.get('course', '').strip(),
+                'gender': data.get('gender', '').strip(),
+                'email': data.get('email', '').strip(),
+                'contact_number': data.get('contact_number', '').strip(),
+                'parent_phone': data.get('parent_phone', '').strip() if data.get('parent_phone') else '',
+                'parent_email': data.get('parent_email', '').strip() if data.get('parent_email') else ''
+            }
+            
+            # Add updated timestamp
+            from datetime import datetime
+            student_data['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            
+            # Update student in Firebase
+            success = update_in_firebase("student_list", student_id, student_data)
+            if success:
+                # Clear cache to force refresh
+                clear_cache()
+                student_data['id'] = student_id
+                return {"success": True, "data": student_data}, 200
+            else:
+                return {"error": "Failed to update student"}, 500
+        except Exception as e:
+            print(f"[ERROR] Error updating student: {e}")
+            import traceback
+            traceback.print_exc()
+            return {"error": str(e)}, 500
+    
+    elif request.method == "DELETE":
+        try:
+            # Delete student from Firebase
+            success = delete_from_firebase("student_list", student_id)
+            if success:
+                # Clear cache to force refresh
+                clear_cache()
+                return {"success": True}, 200
+            else:
+                return {"error": "Failed to delete student"}, 500
+        except Exception as e:
+            print(f"[ERROR] Error deleting student: {e}")
+            return {"error": str(e)}, 500
+
+
 def require_login():
     if "user" not in session:
         return False
@@ -1991,7 +2131,7 @@ def admin_dashboard():
     
     print(f"[ADMIN DASHBOARD] Dashboard loading for admin: {user.get('username', 'unknown')}")
 
-    # Use cached data for uniform designs only
+    # Use cached data for uniform designs and students
     try:
         designs = get_cached_data("uniform_designs", 20)
         print(f"[STATS] Loaded data - Designs: {len(designs)}")
@@ -2024,17 +2164,33 @@ def admin_dashboard():
         # Fallback to empty data
         designs = []
 
-    # Calculate statistics for designs only
+    # Fetch students from student_list collection
+    try:
+        students = get_cached_data("student_list", 100)
+        print(f"[STATS] Loaded data - Students: {len(students)}")
+        
+        # Ensure all students have an 'id' field
+        for i, student in enumerate(students):
+            if isinstance(student, dict):
+                if 'id' not in student or not student.get('id'):
+                    student['id'] = f"student_{i}"
+    except Exception as e:
+        print(f"[WARN] Error loading students data: {e}")
+        students = []
+
+    # Calculate statistics for designs and students
     total_designs = len(designs)
     approved_designs = len([d for d in designs if d.get('status') == 'Approved'])
     pending_designs = len([d for d in designs if d.get('status') == 'Under Review' or d.get('status') == 'Pending Review'])
     rejected_designs = len([d for d in designs if d.get('status') == 'Rejected'])
+    total_students = len(students)
 
     stats = {
         'total_designs': total_designs,
         'approved_designs': approved_designs,
         'pending_designs': pending_designs,
-        'rejected_designs': rejected_designs
+        'rejected_designs': rejected_designs,
+        'total_students': total_students
     }
 
     print(f"[OK] Admin dashboard ready for user: {user.get('username', 'unknown')}")
@@ -2046,6 +2202,7 @@ def admin_dashboard():
         "admin_dashboard.html",
         user=user,
         designs=designs,  # Pass all designs
+        students=students,  # Pass all students
         stats=stats
     )
 
