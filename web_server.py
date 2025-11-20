@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
-from datetime import timedelta
+from datetime import timedelta, datetime
 import hashlib
 from firebase_config import (
     get_from_firebase,
@@ -1180,6 +1180,67 @@ def api_violations():
             print(f"[DEBUG] Attempting to add violation to Firebase")
             doc_id = add_to_firebase("violations", data)
             
+            # Also add to student_violations/violation_history for management table
+            student_id = data.get('student_id', '').strip()
+            student_name = data.get('student_name', '').strip()
+            if student_id and student_name:
+                try:
+                    # Check if student_violations document exists for this student_id
+                    if firebase_manager.db:
+                        student_violations_ref = firebase_manager.db.collection("student_violations")
+                        student_docs = student_violations_ref.where("student_id", "==", student_id).limit(1).stream()
+                        parent_doc_id = None
+                        
+                        for doc in student_docs:
+                            parent_doc_id = doc.id
+                            break
+                        
+                        # If no parent document exists, create one
+                        if not parent_doc_id:
+                            parent_data = {
+                                'student_id': student_id,
+                                'student_name': student_name,
+                                'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                                'updated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                            }
+                            parent_doc_ref = student_violations_ref.add(parent_data)
+                            parent_doc_id = parent_doc_ref[1].id
+                            print(f"[DEBUG] Created new student_violations document: {parent_doc_id}")
+                        
+                        # Add violation to violation_history subcollection
+                        violation_history_data = {
+                            'student_id': student_id,
+                            'student_name': student_name,
+                            'violation_type': data.get('violation_type', 'Uniform Violation'),
+                            'description': data.get('description', ''),
+                            'date': data.get('date', ''),
+                            'status': data.get('status', 'Warning'),
+                            'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                            'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                        }
+                        
+                        # Add missing_items if description contains item information
+                        if data.get('description'):
+                            # Try to extract missing items from description
+                            description = data.get('description', '').lower()
+                            missing_items = []
+                            common_items = ['id', 'belt', 'shoes', 'shirt', 'pants', 'tie', 'jacket', 'cap']
+                            for item in common_items:
+                                if item in description:
+                                    missing_items.append(item.title())
+                            if missing_items:
+                                violation_history_data['missing_items'] = missing_items
+                                violation_history_data['last_missing_items'] = missing_items
+                        
+                        violation_history_ref = student_violations_ref.document(parent_doc_id).collection("violation_history")
+                        violation_history_doc = violation_history_ref.add(violation_history_data)
+                        violation_history_id = violation_history_doc[1].id
+                        print(f"[DEBUG] Added violation to violation_history: {violation_history_id} under parent {parent_doc_id}")
+                except Exception as e:
+                    print(f"[WARN] Error adding violation to violation_history: {e}")
+                    import traceback
+                    traceback.print_exc()
+            
             if doc_id:
                 print(f"[SUCCESS] Violation added successfully with ID: {doc_id}")
                 appeal_created = False
@@ -1942,7 +2003,8 @@ def api_students():
                 'email': data.get('email', '').strip(),
                 'contact_number': data.get('contact_number', '').strip(),
                 'parent_phone': data.get('parent_phone', '').strip() if data.get('parent_phone') else '',
-                'parent_email': data.get('parent_email', '').strip() if data.get('parent_email') else ''
+                'parent_email': data.get('parent_email', '').strip() if data.get('parent_email') else '',
+                'status': data.get('status', 'Active').strip() if data.get('status') else 'Active'
             }
             
             # Add timestamp
@@ -2011,7 +2073,8 @@ def api_student(student_id):
                 'email': data.get('email', '').strip(),
                 'contact_number': data.get('contact_number', '').strip(),
                 'parent_phone': data.get('parent_phone', '').strip() if data.get('parent_phone') else '',
-                'parent_email': data.get('parent_email', '').strip() if data.get('parent_email') else ''
+                'parent_email': data.get('parent_email', '').strip() if data.get('parent_email') else '',
+                'status': data.get('status', 'Active').strip() if data.get('status') else 'Active'
             }
             
             # Add updated timestamp

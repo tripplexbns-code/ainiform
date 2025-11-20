@@ -513,6 +513,16 @@
             color: #721c24;
         }
         
+        .status-active {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .status-inactive, .status-deactivated {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        
         .design-name-link {
             color: #1877f2;
             text-decoration: none;
@@ -815,6 +825,241 @@
         .design-content-wrapper {
             background: #f8f9fa;
             padding: 0;
+        }
+        
+        /* Student Detail Modal Styles */
+        #studentDetailModal .modal-content {
+            max-width: 700px;
+            border-radius: 16px;
+            overflow: visible;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #studentDetailModal .student-detail-header {
+            flex-shrink: 0;
+        }
+        
+        #studentDetailModal #studentDetailContent {
+            overflow-y: auto;
+            overflow-x: hidden;
+            flex: 1;
+            min-height: 0;
+        }
+        
+        .student-detail-header {
+            background: linear-gradient(135deg, #1877f2 0%, #1565c0 100%);
+            color: white;
+            padding: 25px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .student-detail-header h3 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .student-detail-container {
+            background: #f8f9fa;
+            padding: 0;
+            min-height: 100%;
+        }
+        
+        .student-profile-header {
+            background: white;
+            padding: 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 1px solid #e4e6ea;
+        }
+        
+        .student-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            flex-shrink: 0;
+        }
+        
+        .student-name-section {
+            flex: 1;
+        }
+        
+        .student-name {
+            margin: 0 0 8px 0;
+            font-size: 28px;
+            font-weight: 700;
+            color: #1c1e21;
+        }
+        
+        .student-number {
+            margin: 0;
+            font-size: 16px;
+            color: #65676b;
+            font-weight: 500;
+        }
+        
+        .student-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+        
+        .info-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+        
+        .info-card.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .info-icon {
+            font-size: 32px;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f0f2f5 0%, #e4e6ea 100%);
+            border-radius: 12px;
+            flex-shrink: 0;
+        }
+        
+        .info-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .info-label {
+            font-size: 13px;
+            color: #65676b;
+            font-weight: 500;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .info-value {
+            font-size: 16px;
+            color: #1c1e21;
+            font-weight: 600;
+            word-break: break-word;
+        }
+        
+        .student-detail-actions {
+            padding: 20px 30px 30px 30px;
+            background: white;
+            border-top: 1px solid #e4e6ea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            gap: 10px;
+        }
+        
+        .student-detail-actions .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* Custom scrollbar for student detail content */
+        #studentDetailModal #studentDetailContent::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #studentDetailModal #studentDetailContent::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        #studentDetailModal #studentDetailContent::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        
+        #studentDetailModal #studentDetailContent::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        /* Firefox scrollbar */
+        #studentDetailModal #studentDetailContent {
+            scrollbar-width: thin;
+            scrollbar-color: #888 #f1f1f1;
+        }
+        
+        @media (max-width: 768px) {
+            #studentDetailModal .modal-content {
+                width: 95%;
+                margin: 5% auto;
+                max-height: 95vh;
+            }
+            
+            .student-profile-header {
+                flex-direction: column;
+                text-align: center;
+                padding: 25px 20px;
+            }
+            
+            .student-info-grid {
+                grid-template-columns: 1fr;
+                padding: 20px;
+                gap: 12px;
+            }
+            
+            .info-card.full-width {
+                grid-column: 1;
+            }
+            
+            .student-name {
+                font-size: 24px;
+            }
+            
+            #studentDetailModal #studentDetailContent {
+                padding: 20px;
+            }
+            
+            .student-detail-actions {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .student-detail-actions .btn-group {
+                width: 100%;
+                flex-direction: column;
+            }
+            
+            .student-detail-actions .btn-group .btn {
+                width: 100%;
+            }
+            
+            .student-detail-actions .btn-secondary {
+                width: 100%;
+            }
         }
         
         .design-main-section {
@@ -1317,9 +1562,7 @@
                                 <th>Student Number</th>
                                 <th>Name</th>
                                 <th>Course</th>
-                                <th>Gender</th>
-                                <th>Email</th>
-                                <th>Contact Number</th>
+                                <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -1329,19 +1572,16 @@
                                 <td>{{ student.student_number or 'N/A' }}</td>
                                 <td>{{ student.name or 'N/A' }}</td>
                                 <td>{{ student.course or 'N/A' }}</td>
-                                <td>{{ student.gender or 'N/A' }}</td>
-                                <td>{{ student.email or 'N/A' }}</td>
-                                <td>{{ student.contact_number or 'N/A' }}</td>
+                                <td><span class="status-badge status-{{ (student.status or 'Active').lower().replace(' ', '-') }}">{{ student.status or 'Active' }}</span></td>
                                 <td>
                                     <button class="btn btn-info btn-sm" onclick="viewStudentDetails('{{ student.id }}')">View</button>
-                                    <button class="btn btn-warning btn-sm" onclick="editStudent('{{ student.id }}')">Edit</button>
                                     <button class="btn btn-danger btn-sm" onclick="deleteStudent('{{ student.id }}')">Delete</button>
                                 </td>
                             </tr>
                             {% endfor %}
                             {% if not students or students|length == 0 %}
                             <tr>
-                                <td colspan="7" style="text-align: center; padding: 20px; color: #666;">
+                                <td colspan="5" style="text-align: center; padding: 20px; color: #666;">
                                     <div style="margin-bottom: 10px;">📋 No students found</div>
                                     <button class="btn btn-primary" onclick="openModal('studentModal')">➕ Add First Student</button>
                                 </td>
@@ -1487,6 +1727,22 @@
         </div>
     </div>
 
+    <!-- Student Detail Modal -->
+    <div id="studentDetailModal" class="modal">
+        <div class="modal-content" style="max-width: 700px; padding: 0;">
+            <div class="student-detail-header">
+                <h3>Student Information</h3>
+                <button class="close-btn" onclick="closeModal('studentDetailModal')" style="color: #666; font-size: 28px; background: none; border: none; cursor: pointer; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background 0.2s;">&times;</button>
+            </div>
+            <div id="studentDetailContent" style="padding: 30px;">
+                <div style="text-align: center; padding: 40px;">
+                    <div class="spinner" style="border: 4px solid #f3f3f3; border-top: 4px solid #1877f2; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                    <p style="margin-top: 15px; color: #666; font-size: 15px;">Loading student details...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Alert Messages -->
     <div id="alertContainer"></div>
 
@@ -1521,6 +1777,9 @@
                 document.getElementById('studentId').value = '';
                 document.getElementById('studentModalTitle').textContent = 'Add New Student';
                 document.getElementById('studentSubmitBtn').textContent = 'Add Student';
+            } else if (modalId === 'studentDetailModal') {
+                // Reset student detail modal content
+                document.getElementById('studentDetailContent').innerHTML = '';
             }
         }
 
@@ -1937,6 +2196,19 @@
 
         // View student details
         function viewStudentDetails(studentId) {
+            // Open the modal
+            openModal('studentDetailModal');
+            
+            // Reset content to loading state
+            const contentDiv = document.getElementById('studentDetailContent');
+            contentDiv.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <div class="spinner" style="border: 4px solid #f3f3f3; border-top: 4px solid #1877f2; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                    <p style="margin-top: 15px; color: #666; font-size: 15px;">Loading student details...</p>
+                </div>
+            `;
+            
+            // Fetch student details
             fetch(`/api/students/${studentId}`, {
                 method: 'GET',
                 credentials: 'same-origin'
@@ -1945,13 +2217,110 @@
             .then(result => {
                 if (result.success && result.data) {
                     const student = result.data;
-                    alert(`Student Details:\n\nName: ${student.name || 'N/A'}\nStudent Number: ${student.student_number || 'N/A'}\nCourse: ${student.course || 'N/A'}\nGender: ${student.gender || 'N/A'}\nEmail: ${student.email || 'N/A'}\nContact: ${student.contact_number || 'N/A'}\nParent Phone: ${student.parent_phone || 'N/A'}\nParent Email: ${student.parent_email || 'N/A'}`);
+                    
+                    // Build the student details HTML
+                    let detailsHTML = `
+                        <div class="student-detail-container">
+                            <div class="student-profile-header">
+                                <div class="student-avatar">
+                                    <span style="font-size: 48px;">👤</span>
+                                </div>
+                                <div class="student-name-section">
+                                    <h2 class="student-name">${student.name || 'N/A'}</h2>
+                                    <p class="student-number">Student #${student.student_number || 'N/A'}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="student-info-grid">
+                                <div class="info-card">
+                                    <div class="info-icon">📚</div>
+                                    <div class="info-content">
+                                        <div class="info-label">Course</div>
+                                        <div class="info-value">${student.course || 'N/A'}</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="info-card">
+                                    <div class="info-icon">⚧️</div>
+                                    <div class="info-content">
+                                        <div class="info-label">Gender</div>
+                                        <div class="info-value">${student.gender || 'N/A'}</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="info-card">
+                                    <div class="info-icon">📊</div>
+                                    <div class="info-content">
+                                        <div class="info-label">Status</div>
+                                        <div class="info-value"><span class="status-badge status-${(student.status || 'Active').toLowerCase().replace(' ', '-')}">${student.status || 'Active'}</span></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="info-card full-width">
+                                    <div class="info-icon">📧</div>
+                                    <div class="info-content">
+                                        <div class="info-label">Email</div>
+                                        <div class="info-value">${student.email || 'N/A'}</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="info-card full-width">
+                                    <div class="info-icon">📱</div>
+                                    <div class="info-content">
+                                        <div class="info-label">Contact Number</div>
+                                        <div class="info-value">${student.contact_number || 'N/A'}</div>
+                                    </div>
+                                </div>
+                                
+                                ${student.parent_phone ? `
+                                <div class="info-card full-width">
+                                    <div class="info-icon">👨‍👩‍👧</div>
+                                    <div class="info-content">
+                                        <div class="info-label">Parent/Guardian Phone</div>
+                                        <div class="info-value">${student.parent_phone}</div>
+                                    </div>
+                                </div>
+                                ` : ''}
+                                
+                                ${student.parent_email ? `
+                                <div class="info-card full-width">
+                                    <div class="info-icon">📬</div>
+                                    <div class="info-content">
+                                        <div class="info-label">Parent/Guardian Email</div>
+                                        <div class="info-value">${student.parent_email}</div>
+                                    </div>
+                                </div>
+                                ` : ''}
+                            </div>
+                            
+                            <div class="student-detail-actions">
+                                <div class="btn-group">
+                                    <button class="btn btn-warning" onclick="editStudentFromModal('${student.id || studentId}')">✏️ Edit</button>
+                                    <button class="btn btn-danger" onclick="toggleStudentStatus('${student.id || studentId}', '${student.status || 'Active'}')">${(student.status || 'Active').toLowerCase() === 'active' ? '🚫 Deactivate' : '✅ Activate'}</button>
+                                    ${(student.status || 'Active').toLowerCase() !== 'suspended' ? `<button class="btn btn-danger" onclick="suspendStudent('${student.id || studentId}')" style="background-color: #dc3545; border-color: #dc3545;">⛔ Suspend</button>` : ''}
+                                </div>
+                                <button class="btn btn-secondary" onclick="closeModal('studentDetailModal')">Close</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    contentDiv.innerHTML = detailsHTML;
                 } else {
-                    showAlert('Error loading student details: ' + (result.error || 'Unknown error'), 'error');
+                    contentDiv.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <p style="color: #dc3545; font-size: 16px; margin-bottom: 20px;">Error loading student details: ${result.error || 'Unknown error'}</p>
+                            <button class="btn btn-secondary" onclick="closeModal('studentDetailModal')">Close</button>
+                        </div>
+                    `;
                 }
             })
             .catch(error => {
-                showAlert('Error loading student details: ' + error.message, 'error');
+                contentDiv.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <p style="color: #dc3545; font-size: 16px; margin-bottom: 20px;">Error loading student details: ${error.message}</p>
+                        <button class="btn btn-secondary" onclick="closeModal('studentDetailModal')">Close</button>
+                    </div>
+                `;
             });
         }
 
@@ -1989,6 +2358,135 @@
             })
             .catch(error => {
                 showAlert('Error loading student data: ' + error.message, 'error');
+            });
+        }
+
+        // Edit student from detail modal
+        function editStudentFromModal(studentId) {
+            // Close the detail modal first
+            closeModal('studentDetailModal');
+            
+            // Then open the edit modal
+            editStudent(studentId);
+        }
+
+        // Toggle student status (Activate/Deactivate)
+        function toggleStudentStatus(studentId, currentStatus) {
+            const isActive = (currentStatus || 'Active').toLowerCase() === 'active';
+            const newStatus = isActive ? 'Inactive' : 'Active';
+            const action = isActive ? 'deactivate' : 'activate';
+            
+            if (!confirm(`Are you sure you want to ${action} this student?`)) return;
+            
+            // First, get the current student data
+            fetch(`/api/students/${studentId}`, {
+                method: 'GET',
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success && result.data) {
+                    const student = result.data;
+                    
+                    // Prepare update data with status
+                    const updateData = {
+                        name: student.name || '',
+                        student_number: student.student_number || '',
+                        course: student.course || '',
+                        gender: student.gender || '',
+                        email: student.email || '',
+                        contact_number: student.contact_number || '',
+                        parent_phone: student.parent_phone || '',
+                        parent_email: student.parent_email || '',
+                        status: newStatus
+                    };
+                    
+                    // Update student with new status
+                    return fetch(`/api/students/${studentId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify(updateData)
+                    });
+                } else {
+                    throw new Error(result.error || 'Failed to fetch student data');
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    showAlert(`Student ${action}d successfully!`, 'success');
+                    // Close the detail modal and reload the page
+                    closeModal('studentDetailModal');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    showAlert(`Error ${action}ing student: ` + (result.error || 'Unknown error'), 'error');
+                }
+            })
+            .catch(error => {
+                showAlert(`Error ${action}ing student: ` + error.message, 'error');
+            });
+        }
+
+        // Suspend student
+        function suspendStudent(studentId) {
+            if (!confirm('Are you sure you want to suspend this student?')) return;
+            
+            // First, get the current student data
+            fetch(`/api/students/${studentId}`, {
+                method: 'GET',
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success && result.data) {
+                    const student = result.data;
+                    
+                    // Prepare update data with suspended status
+                    const updateData = {
+                        name: student.name || '',
+                        student_number: student.student_number || '',
+                        course: student.course || '',
+                        gender: student.gender || '',
+                        email: student.email || '',
+                        contact_number: student.contact_number || '',
+                        parent_phone: student.parent_phone || '',
+                        parent_email: student.parent_email || '',
+                        status: 'Suspended'
+                    };
+                    
+                    // Update student with suspended status
+                    return fetch(`/api/students/${studentId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify(updateData)
+                    });
+                } else {
+                    throw new Error(result.error || 'Failed to fetch student data');
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    showAlert('Student suspended successfully!', 'success');
+                    // Close the detail modal and reload the page
+                    closeModal('studentDetailModal');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    showAlert('Error suspending student: ' + (result.error || 'Unknown error'), 'error');
+                }
+            })
+            .catch(error => {
+                showAlert('Error suspending student: ' + error.message, 'error');
             });
         }
 

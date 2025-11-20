@@ -2470,6 +2470,9 @@
                     <div id="violations" class="tab-content active">
         <div class="section-header">
             <h3 class="section-title" data-translate="violations-management">Uniform Violations Management</h3>
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="openViolationModal()">➕ Add Violation</button>
+            </div>
         </div>
         
                         
@@ -2842,6 +2845,11 @@
                     }
                 }, 100);
             }
+        }
+
+        // Open violation modal function
+        function openViolationModal() {
+            openModal('violationModal');
         }
 
         function closeModal(modalId) {
